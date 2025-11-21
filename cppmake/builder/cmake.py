@@ -8,9 +8,8 @@ from cppmake.utility.decorator  import member, syncable
 
 class Cmake:
     name = "cmake"
-    path = "cmake"
-    def           __init__(self):                            ...
-    async def    __ainit__(self):                            ...
+    def           __init__(self, path="cmake"):              ...
+    async def    __ainit__(self, path="cmake"):              ...
     def             build (self, package, dir=".", args=[]): ...
     async def async_build (self, package, dir=".", args=[]): ...
 
@@ -20,8 +19,9 @@ cmake = ...
 
 @member(Cmake)
 @syncable
-async def __ainit__(self):
-    await Cmake._async_check()
+async def __ainit__(self, path="cmake"):
+    await Cmake._async_check(path)
+    self.path = path
 
 @member(Cmake)
 @syncable
@@ -67,12 +67,14 @@ async def async_build(self, package, dir=".", args=[]):
         raise
 
 @member(Cmake)
-async def _async_check():
+async def _async_check(path):
     try:
-        version = await async_run(command=[Cmake.path, "--version"], return_stdout=True)
+        version = await async_run(command=[path, "--version"], return_stdout=True)
         if "cmake" not in version.lower():
-            raise ConfigError(f'cmake is not installed (with "{Cmake.path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'cmake is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'cmake is not installed (with "{Cmake.path} --version" exits {error.code}')
-        
+        raise ConfigError(f'cmake is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+    except FileNotFoundError as error:
+        raise ConfigError(f'cmake is not installed (with "{path} --version" fails "{error}")')
+
 cmake = Cmake()

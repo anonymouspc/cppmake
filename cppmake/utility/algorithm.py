@@ -4,6 +4,9 @@ def recursive_collect(node, next, collect, root=True, flatten=False): ...
 
 
 
+# Our goal is to make the caller more pretty (with the algorithm itself to be maybe dirty).
+# Feel free to overwrite the implemention when we need something new from it.
+
 def recursive_collect(node, next, collect, root=True, flatten=False):
     return _recursive_collect_impl(node, next, collect, root, flatten, cached=list(), visited=set())
 

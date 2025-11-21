@@ -2,6 +2,7 @@ from cppmake.basic.config          import config
 from cppmake.compiler.all          import compiler
 from cppmake.error.logic           import LogicError
 from cppmake.execution.operation   import when_all
+from cppmake.execution.scheduler   import scheduler
 from cppmake.file.file_system      import parent_path, canonical_path, exist_file, exist_dir, modified_time_of_file
 from cppmake.logger.module_imports import module_imports_logger
 from cppmake.logger.module_mapper  import module_mapper_logger
@@ -32,10 +33,10 @@ class Module:
 async def __ainit__(self, name, file):
     self.name           = name
     self.file           = file
-    self.module_file    = f"binary/{config.type}/module/{self.name.replace('.', '/').replace(':', '-')}{compiler.module_suffix}"
-    self.object_file    = f"binary/{config.type}/module/{self.name.replace('.', '/').replace(':', '-')}{compiler.object_suffix}"
-    self.import_modules = await when_all([Module.__anew__(Module, import_)for import_ in await module_imports_logger.async_get_imports(type="module", file=self.file)])
-    self.import_package = await Package.__anew__(Package, self.name.split(':')[0].split('.')[0]) if exist_dir(f"package/{self.name.split(':')[0].split('.')[0]}") else None
+    self.module_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.module_suffix}"
+    self.object_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.object_suffix}"
+    self.import_modules = await when_all([Module.__anew__(Module, import_) for import_ in await module_imports_logger.async_get_imports(type="module", name=self.name, file=self.file)])
+    self.import_package = await Package.__anew__(Package, "main" if self.file.startswith("module/") else self.name.split(':')[0].split('.')[0])
     module_mapper_logger.log_mapper(name=self.name, file=self.file)
 
 @member(Module)
@@ -46,14 +47,16 @@ async def async_precompile(self):
     if not await self.async_is_precompiled():
         await when_all([module.async_precompile() for module in self.import_modules])
         await self.import_package.async_build() if self.import_package is not None else None
-        await compiler.async_precompile(
-            self.file,
-            module_file =self.module_file,
-            object_file =self.object_file,
-            module_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file)),
-            include_dirs=recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir),
-            defines     =config.defines if self.import_package is None else self.import_package.defines
-        )
+        async with scheduler.schedule():
+            print(f"precompile module: {self.name}")
+            await compiler.async_precompile(
+                self.file,
+                module_file =self.module_file,
+                object_file =self.object_file,
+                module_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file)),
+                include_dirs=recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir),
+                defines     =self.import_package.cppmake.defines if hasattr(self.import_package.cppmake, "defines") else None
+            )
 
 @member(Module)
 @syncable

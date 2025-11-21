@@ -1,17 +1,16 @@
-from cppmake.error.config      import ConfigError
-from cppmake.error.subprocess  import SubprocessError
-from cppmake.execution.run     import async_run
-from cppmake.utility.decorator import member, syncable
+from cppmake.error.config        import ConfigError
+from cppmake.error.subprocess    import SubprocessError
+from cppmake.execution.run       import async_run
+from cppmake.utility.decorator   import member, syncable
 
 class Git:
     name = "git"
-    path = "git"
-    def           __init__ (self):          ...
-    async def     __ainit__(self):          ...
-    def             log    (self, git_dir): ...
-    async def async_log    (self, git_dir): ...
-    def             status (self, git_dir): ...
-    async def async_status (self, git_dir): ...
+    def           __init__ (self, path="git"): ...
+    async def     __ainit__(self, path="git"): ...
+    def             log    (self, git_dir):    ...
+    async def async_log    (self, git_dir):    ...
+    def             status (self, git_dir):    ...
+    async def async_status (self, git_dir):    ...
 
 git = ...
 
@@ -19,8 +18,9 @@ git = ...
 
 @member(Git)
 @syncable
-async def __ainit__(self):
-    await Git._async_check()
+async def __ainit__(self, path="git"):
+    await Git._async_check(path)
+    self.path = path
 
 @member(Git)
 @syncable
@@ -41,18 +41,20 @@ async def async_status(self, git_dir):
         command=[
             self.path,
             "-C", git_dir,
-            "status", "--short"
+            "status"
         ],
         return_stdout=True
     )
 
 @member(Git)
-async def _async_check():
+async def _async_check(path):
     try:
-        version = await async_run(command=[Git.path, "--version"], return_stdout=True)
+        version = await async_run(command=[path, "--version"], return_stdout=True)
         if "git" not in version.lower():
-            raise ConfigError(f'git is not installed (with "{Git.path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'git is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'git is not installed (with "{Git.path} --version" exits {error.code}')
-        
+        raise ConfigError(f'git is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+    except FileNotFoundError as error:
+        raise ConfigError(f'git is not installed (with "{path} --version" fails "{error}")')
+
 git = Git()

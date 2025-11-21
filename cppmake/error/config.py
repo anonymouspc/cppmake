@@ -6,7 +6,6 @@ import sys
 class ConfigError(Exception):
     def __init__     (self, message): ...
     def __terminate__():              ...
-    def add_prefix   (self, prefix):  ...
 
 
 
@@ -21,7 +20,3 @@ def __terminate__():
         rethrow_exception(current_exception())
     except ConfigError as error:
         print(f"{red("fatal error")}: {error}", file=sys.stderr)
-
-@member(ConfigError)
-def add_prefix(self, prefix):
-    self.__init__(f"{prefix}\n{self}")

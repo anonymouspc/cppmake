@@ -1,26 +1,17 @@
 from cppmake.basic.config import config
+from cppmake.error.config import ConfigError
 import importlib
 
 def import_file(file): ...
 
 
 
-def import_file(file, to_config=False):
-    if file is not None:
+def import_file(file):
+    try:
         module = importlib.machinery.SourceFileLoader(
             fullname=file.removesuffix(".py").replace('/', '.'), 
             path=file
         ).load_module()
-    else:
-        module = _EmptyModule()
-    if not hasattr(module, "build"):
-           setattr(module, "build", lambda: None)
-    if not hasattr(module, "defines"):
-           setattr(module, "defines", {})
-    if to_config:
-        config.defines = module.defines
+    except FileNotFoundError:
+        raise ConfigError(f"cppmake.py is not found (with path = {file})")
     return module
-
-
-class _EmptyModule:
-    pass

@@ -9,9 +9,8 @@ from cppmake.utility.decorator  import member, syncable
 
 class Makefile:
     name = "makefile"
-    path = "make"
-    def           __init__(self):                                     ...
-    async def    __ainit__(self):                                     ...
+    def           __init__(self, path="make"):                        ...
+    async def    __ainit__(self, path="make"):                        ...
     def             build (self, package, file="configure", args=[]): ...
     async def async_build (self, package, file="configure", args=[]): ...
 
@@ -21,8 +20,9 @@ makefile = ...
 
 @member(Makefile)
 @syncable
-async def __ainit__(self):
-    await Makefile._async_check()
+async def __ainit__(self, path="make"):
+    await Makefile._async_check(path)
+    self.path = path
 
 @member(Makefile)
 @syncable
@@ -68,12 +68,14 @@ async def async_build(self, package, file="configure", args=[]):
         raise
 
 @member(Makefile)
-async def _async_check():
+async def _async_check(path):
     try:
-        version = await async_run(command=[Makefile.path, "--version"], return_stdout=True)
+        version = await async_run(command=[path, "--version"], return_stdout=True)
         if "make" not in version.lower():
-            raise ConfigError(f'makefile is not installed (with f"{Makefile.path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'makefile is not valid (with f"{path} --version" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'makefile is not installed (with f"{Makefile.path} --version" exits {error.code}')
+        raise ConfigError(f'makefie is not valid (with f"{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits exits {error.code})')
+    except FileNotFoundError as error:
+        raise ConfigError(f'makefile is not installed (with f"{path} --version" fails "{error}")')
         
 makefile = Makefile()

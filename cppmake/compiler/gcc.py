@@ -11,8 +11,8 @@ class Gcc:
     name          = "gcc"
     module_suffix = ".gcm"
     object_suffix = ".o"
-    def           __init__    (self, path="g++"):                                                                                      ...
-    async def     __ainit__   (self, path="g++"):                                                                                      ...
+    def           __init__    (self, path="g++"):                                                                                 ...
+    async def     __ainit__   (self, path="g++"):                                                                                 ...
     def             preprocess(self, file,                                                                           defines={}): ...
     async def async_preprocess(self, file,                                                                           defines={}): ...
     def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                defines={}): ...
@@ -30,7 +30,7 @@ async def __ainit__(self, path="g++"):
     self.compile_flags = [
        f"-std={config.std}", "-fmodules", 
         "-fdiagnostics-colors=always", "-fdiagnostics-format=sarif-stderr",
-        "-Wall", "-Wno-global-module", "-Wno-global-module-tu-local-exports", "-Wno-deprecated-variadic-comma-omission",
+        "-Wall", "-Wno-global-module", "-Wno-global-module-tu-local-exports",
      *(["-O0", "-g", "-DDEBUG", "-fno-inline"] if config.type == "debug"   else
        ["-O3",       "-DNDEBUG"              ] if config.type == "release" else
        ["-Os"                                ] if config.type == "size"    else 
@@ -38,8 +38,7 @@ async def __ainit__(self, path="g++"):
     ]
     self.link_flags = [
         "-lstdc++exp",
-     *(["-s"] if config.type == "release" or config.type == "size" else 
-       [])
+     *(["-s"] if config.type == "release" or config.type == "size" else [])
     ]
 
 @member(Gcc)
@@ -102,6 +101,8 @@ async def _async_check(path):
     try:
         version = await async_run(command=[path, "--version"], return_stdout=True)
         if "gcc" not in version.lower():
-            raise ConfigError(f'compiler is not gcc (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'gcc is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'compiler is not gcc (with "{path} --version" exits {error.code})')
+        raise ConfigError(f'gcc is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+    except FileNotFoundError as error:
+        raise ConfigError(f'gcc is not installed (with "{path} --version" fails "{error}")')

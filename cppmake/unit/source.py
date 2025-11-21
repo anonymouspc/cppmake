@@ -7,6 +7,7 @@ from cppmake.file.file_system      import canonical_path, parent_path, exist_fil
 from cppmake.logger.module_imports import module_imports_logger
 from cppmake.system.all            import system
 from cppmake.unit.module           import Module
+from cppmake.unit.package          import Package
 from cppmake.utility.algorithm     import recursive_collect
 from cppmake.utility.decorator     import member, namable, once, syncable, trace, unique
 from cppmake.utility.inline        import raise_
@@ -32,8 +33,9 @@ class Source:
 async def __ainit__(self, name, file):
     self.name            = name
     self.file            = file
-    self.executable_file = f"binary/{config.type}/source/{self.name.replace('.', '/')}{system.executable_suffix}"
-    self.import_modules  = await when_all([Module.__anew__(Module, name) for name in await module_imports_logger.async_get_imports(type="source", file=self.file)])
+    self.executable_file = f"binary/{config.type}/source/{self.name}{system.executable_suffix}"
+    self.import_modules  = await when_all([Module.__anew__(Module, name) for name in await module_imports_logger.async_get_imports(type="source", name=self.name, file=self.file)])
+    self.import_package  = await Package.__anew__(Package, "main")
 
 @member(Source)
 @syncable
@@ -43,6 +45,7 @@ async def async_compile(self):
     if not await self.async_is_compiled():
         await when_all([module.async_precompile() for module in self.import_modules])
         async with scheduler.schedule():
+            print(f"compile source: {self.name}")
             await compiler.async_compile(
                 self.file,
                 executable_file=self.executable_file,
@@ -50,7 +53,7 @@ async def async_compile(self):
                 include_dirs   =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir,                           root=False),
                 link_files     =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.object_file,                                          root=False) + 
                                 recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: iterate_dir(module.import_package.lib_dir, recursive=False), root=False, flatten=True),
-                defines        =config.defines
+                defines        =self.import_package.cppmake.defines if hasattr(self.import_package.cppmake, "defines") else None
             )
 
 @member(Source)

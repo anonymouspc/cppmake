@@ -1,6 +1,7 @@
 from cppmake.execution.operation import sync_wait
 from cppmake.utility.inline      import assert_
 import asyncio
+import functools
 import inspect
 import threading
 
@@ -16,10 +17,10 @@ def unique  (cls ): ...
 # Every project has its own kind of shit mountain,
 # and the main difference lies in where those mountains are placed.
 # Some pile them up in plain sight, fully transparent to users
-# (for example, C++ templates, which "zero-cost" expose every bit
-# of mess from their inner implementations),
-# while others prefer to hide them deep in a corner
-# where no one can ever reach (for example, the Python GIL).
+# (for example, C++ templates, which exposes every bit of the mess
+# from their inner implementations but gains "zero-cost abstraction"),
+# while others prefer to hide them deep in a corner where no one can ever reach 
+# (for example, the Python GIL).
 #
 # Here, in this project, we've gathered and neatly buried
 # all our shit in the file below. :)
@@ -30,6 +31,10 @@ def member(cls):
         if type(func) != _MultiFunc:
             assert hasattr(cls, func.__name__) or func.__name__.startswith("_") # Private functions which starts with '_' are not required to be pre-declared in class.
             setattr(cls, func.__name__, func)
+            try:
+                delattr(inspect.getmodule(func), func.__name__)
+            except:
+                pass
         else:
             for subfunc in func:
                 memberizer(subfunc)
@@ -38,9 +43,10 @@ def member(cls):
 def namable(func):
     if type(func) != _MultiFunc:
         assert inspect.iscoroutinefunction(func)
+        @functools.wraps(func)
         async def namable_func(arg1, name=None, **kwargs):
             cls = arg1 if type(arg1) == type else type(arg1)
-            if cls.__qualname__.lower() == "module" or cls.__qualname__.lower() == "source": # Yes, this is fully shit, but we just make it work.
+            if cls.__qualname__.lower() == "module" or cls.__qualname__.lower() == "source": # Yes, this is shit, but we just make it work.
                 assert (name is not None and len(kwargs) == 0) or (name is None and len(kwargs) == 1 and "file" in kwargs.keys())
                 file = kwargs["file"] if "file" in kwargs else None
                 return await func(arg1, name,       cls.      _name_to_file(name))       if name is not None and file is     None and hasattr(cls,       "_name_to_file") else \
@@ -65,19 +71,20 @@ def namable(func):
 
 def once(func):
     assert inspect.iscoroutinefunction(func)
+    @functools.wraps(func)
     async def once_func(self, *args): # No kwargs
         if not         hasattr(self, f"_once_{func.__name__}"):
                        setattr(self, f"_once_{func.__name__}", {})
         if args not in getattr(self, f"_once_{func.__name__}").keys():
                        getattr(self, f"_once_{func.__name__}")[args] = asyncio.create_task(func(self, *args))
         return await   getattr(self, f"_once_{func.__name__}")[args]
-    once_func.__name__ = func.__name__
     return once_func
 
 def syncable(func):
     if type(func) != _MultiFunc:
         assert inspect.iscoroutinefunction(func)
         assert func.__name__.startswith("async_") or func.__name__.startswith("__a") # Should have pre-declaraed the corresponding methods.
+        @functools.wraps(func)
         def sync_func(*args, **kwargs):
             value = None
             error = None
@@ -90,6 +97,8 @@ def syncable(func):
                     error = suberror
                 except KeyboardInterrupt as suberror:
                     error = suberror
+                except:
+                     raise
             thread = threading.Thread(target=target)
             thread.start()
             thread.join()
@@ -108,30 +117,27 @@ def syncable(func):
 def trace(func):
     assert inspect.isfunction(func)
     if not inspect.iscoroutinefunction(func):
+        @functools.wraps(func)
         def trace_func(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
             except Exception as error:
-                if hasattr(error, "add_prefix"):
-                    raise error.add_prefix(f"In {type(self).__qualname__.lower()}")
-                else:
-                    raise error
+                raise type(error)(f"In {type(self).__qualname__.lower()} {self.name}\n{error.args[0]}", *error.args[1:])
         return trace_func
     else:
+        @functools.wraps(func)
         async def trace_func(self, *args, **kwargs):
             try:
                 return await func(self, *args, **kwargs)
             except Exception as error:
-                if hasattr(error, "add_prefix"):
-                    raise error.add_prefix(f"In {type(self).__qualname__.lower()}")
-                else:
-                    raise error
-    trace_func.__name__ = func.__name__
+                raise type(error)(f"In {type(self).__qualname__.lower()} {self.name}\n{error.args[0]}", *error.args[1:])
+
     return trace_func
     
 def unique(func):
     assert inspect.isfunction(func)
     assert func.__name__ == "__ainit__"
+    @functools.wraps(func)
     async def unique_anew(cls, *args, **kwargs):
         if not hasattr(cls, "_pool"):
                setattr(cls, "_pool", {})
@@ -149,8 +155,8 @@ class _MultiFunc:
     def __init__(self, funcs):
         assert type(funcs) == list
         self._funcs = funcs
-        for subfunc in self._funcs[1:]:
-            setattr(__import__(subfunc.__module__), subfunc.__name__, subfunc)
+        for subfunc in self._funcs:
+            setattr(inspect.getmodule(subfunc), subfunc.__name__, subfunc)
     def __iter__(self):
         return iter(self._funcs)
     def __getitem__(self, index):

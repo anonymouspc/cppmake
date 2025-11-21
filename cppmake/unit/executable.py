@@ -1,6 +1,5 @@
 from cppmake.basic.config        import config
 from cppmake.execution.run       import async_run
-from cppmake.execution.scheduler import scheduler
 from cppmake.system.all          import system
 from cppmake.unit.source         import Source
 from cppmake.utility.decorator   import member, once, syncable, trace, unique
@@ -26,6 +25,5 @@ async def __ainit__(self, name):
 @trace
 async def async_execute(self):
     await self.import_source.async_compile()
-    async with scheduler.schedule():
-        await async_run(command=[self.executable_file])
+    await async_run(command=[self.executable_file])
 

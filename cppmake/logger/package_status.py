@@ -1,7 +1,7 @@
 from cppmake.basic.config      import config
 from cppmake.basic.exit        import on_exit
 from cppmake.builder.git       import git
-from cppmake.file.file_system  import create_dir
+from cppmake.file.file_system  import create_dir, modified_time_of_file
 from cppmake.system.all        import system
 from cppmake.utility.decorator import member, syncable
 import json
@@ -45,14 +45,13 @@ async def async_log_status(self, name, git_dir):
 
 @member(PackageStatusLogger)
 @syncable
-async def async_get_status(self, name, git_dir):
-    return name in self._content.keys()                                                                                                   and \
-           system.env      == self._content[name]["env"]                                                                                  and \
-           config.compiler == self._content[name]["compiler"]                                                                             and \
-           config.std      == self._content[name]["std"]                                                                                  and \
+async def async_get_status(self, name, git_dir, cppmake_file):
+    return name in self._content.keys()                                                                            and \
+           (cppmake_file is None or modified_time_of_file(cppmake_file) <= self._content[name]["time"])            and \
+           system.env      == self._content[name]["env"]                                                           and \
+           config.compiler == self._content[name]["compiler"]                                                      and \
+           config.std      == self._content[name]["std"]                                                           and \
            (await git.async_log   (git_dir) == self._content[name]["git_log"]    if git_dir is not None else True) and \
            (await git.async_status(git_dir) == self._content[name]["git_status"] if git_dir is not None else True)
-
-
 
 package_status_logger = PackageStatusLogger()

@@ -10,8 +10,8 @@ class Clang:
     name          = "clang"
     module_suffix = ".pcm"
     object_suffix = ".o"
-    def           __init__    (self, path="clang++"):                                                                                  ...
-    async def     __ainit__   (self, path="clang++"):                                                                                  ...
+    def           __init__    (self, path="clang++"):                                                                             ...
+    async def     __ainit__   (self, path="clang++"):                                                                             ...
     def             preprocess(self, file,                                                                           defines={}): ...
     async def async_preprocess(self, file,                                                                           defines={}): ...
     def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                defines={}): ...
@@ -29,15 +29,14 @@ async def __ainit__(self, path="clang++"):
     self.compile_flags = [
        f"-std={config.std}",   
         "-fdiagnostics-color=always",
-        "-Wall", "-Wno-reserved-module-identifier", "-Wno-deprecated-missing-comma-variadic-parameter",
+        "-Wall", "-Wno-reserved-module-identifier",
      *(["-O0", "-g", "-DDEBUG", "-fno-inline"] if config.type == "debug"   else
        ["-O3",       "-DNDEBUG"              ] if config.type == "release" else
        ["-Os"                                ] if config.type == "size"    else 
        [])
     ]
     self.link_flags = [
-     *(["-s"] if config.type == "release" or config.type == "size" else 
-       [])
+     *(["-s"] if config.type == "release" or config.type == "size" else []),
     ]
 
 @member(Clang)
@@ -77,6 +76,7 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
     await async_run(
         command=[
             self.path,
+           *[f"-fprebuilt-module-path={module_dir}" for module_dir in module_dirs],
             "-c", module_file,
             "-o", object_file
         ]
@@ -107,6 +107,8 @@ async def _async_check(path):
     try:
         version = await async_run(command=[path, "--version"], return_stdout=True)
         if "clang" not in version.lower():
-            raise ConfigError(f'compiler is not clang (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'clang is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'compiler is not clang (with "{path} --version" exits {error.code}')
+        raise ConfigError(f'clang is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+    except FileNotFoundError as error:
+        raise ConfigError(f'clang is not installed (with "{path} --version" fails "{error}")')

@@ -1,27 +1,27 @@
-from cppmake.basic.setting    import *
-from cppmake.basic.config     import config
+from .basic.config     import config
 
-from cppmake.builder.cmake    import cmake
-from cppmake.builder.git      import git
-from cppmake.builder.makefile import makefile
+from .builder.cmake    import cmake
+from .builder.git      import git
+from .builder.include  import include
+from .builder.makefile import makefile
 
-from cppmake.compiler.all     import compiler
-from cppmake.compiler.clang   import Clang
-from cppmake.compiler.gcc     import Gcc
-from cppmake.compiler.msvc    import Msvc
+from .compiler.all     import compiler
+from .compiler.clang   import Clang
+from .compiler.gcc     import Gcc
+from .compiler.msvc    import Msvc
 
-from cppmake.error.config     import ConfigError
-from cppmake.error.logic      import LogicError
-from cppmake.error.subprocess import SubprocessError
+from .error.config     import ConfigError
+from .error.logic      import LogicError
+from .error.subprocess import SubprocessError
 
-from cppmake.execution.run    import run
+from .execution.run    import run
 
-from cppmake.system.all       import system
-from cppmake.system.linux     import Linux
-from cppmake.system.macos     import Macos
-from cppmake.system.windows   import Windows
+from .system.all       import system
+from .system.linux     import Linux
+from .system.macos     import Macos
+from .system.windows   import Windows
 
-from cppmake.unit.executable  import Executable
-from cppmake.unit.module      import Module
-from cppmake.unit.package     import Package
-from cppmake.unit.source      import Source
+from .unit.executable  import Executable
+from .unit.module      import Module
+from .unit.package     import Package
+from .unit.source      import Source

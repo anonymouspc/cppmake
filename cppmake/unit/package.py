@@ -3,7 +3,7 @@ from cppmake.error.logic           import LogicError
 from cppmake.execution.operation   import when_all
 from cppmake.execution.scheduler   import scheduler
 from cppmake.file.file_import      import import_file
-from cppmake.file.file_system      import canonical_path, exist_file, exist_dir, iterate_dir
+from cppmake.file.file_system      import canonical_path, exist_file, exist_dir, modified_time_of_file, iterate_dir
 from cppmake.logger.package_status import package_status_logger
 from cppmake.utility.algorithm     import recursive_collect
 from cppmake.utility.decorator     import member, namable, once, syncable, trace, unique
@@ -37,8 +37,7 @@ async def __ainit__(self, name, dir):
     self.install_dir     = f"binary/{config.type}/package/{self.name}/install"
     self.include_dir     = f"binary/{config.type}/package/{self.name}/install/include"
     self.lib_dir         = f"binary/{config.type}/package/{self.name}/install/lib"
-    self.cppmake         = import_file(self.cppmake_file)
-    self.defines         = self.cppmake.defines
+    self.cppmake         = import_file(self.cppmake_file) if self.cppmake_file is not None else None
     self.modules         = ...
     self.import_packages = ...
 
@@ -50,7 +49,8 @@ async def async_build(self):
     if not await self.async_is_built():
         await when_all([package.async_build() for package in self.import_packages])
         async with scheduler.schedule(scheduler.max):
-            self.cppmake.build()
+            print(f"build package: {self.name}")
+            self.cppmake.build() if hasattr(self.cppmake, "build") else None
             await package_status_logger.async_log_status(name=self.name, git_dir=self.git_dir)
 
 @member(Package)
@@ -61,18 +61,19 @@ async def async_is_built(self):
     from cppmake.unit.module import Module
     self.modules = await when_all([Module.__anew__(Module, file=file) for file in iterate_dir(self.module_dir, recursive=True)])
     self.import_packages = recursive_collect(self.modules, next=lambda module: module.import_modules, collect=lambda module: module.import_package if module.import_package is not self else None)
-    print(f"package {self.name} imports {[package.name for package in self.import_packages]}")
-    return all(await when_all([package.async_is_built() for package in self.import_packages])) and \
-           exist_dir(self.install_dir)                                                         and \
-           await package_status_logger.async_get_status(name=self.name, git_dir=self.git_dir)
+    return all(await when_all([package.async_is_built() for package in self.import_packages]))                                and \
+           exist_dir(self.install_dir)                                                                                        and \
+           await package_status_logger.async_get_status(name=self.name, git_dir=self.git_dir, cppmake_file=self.cppmake_file)
 
 @member(Package)
 def _name_to_dir(name):
-    return f"package/{name}" if exist_dir(f"package/{name}") else \
+    return  '.'              if name == "main"               else \
+           f"package/{name}" if exist_dir(f"package/{name}") else \
            raise_(LogicError(f"package is not found (with name = {name}, dir = package/{name})"))
 
 @member(Package)
 def _dir_to_name(dir):
-    return canonical_path(dir).remove_prefix("package/")                                if canonical_path(dir).startswith("package/") and     exist_dir(dir) else \
+    return "main"                                                                       if canonical_path(dir) == '.'                                        else \
+           canonical_path(dir).remove_prefix("package/")                                if canonical_path(dir).startswith("package/") and     exist_dir(dir) else \
            raise_(LogicError(f"package is not found (with dir = {dir})"))               if canonical_path(dir).startswith("package/") and not exist_dir(dir) else \
            raise_(LogicError(f'package does not match "package/*" (with dir = {dir})'))

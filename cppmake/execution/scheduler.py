@@ -2,6 +2,8 @@ from cppmake.basic.config      import config
 from cppmake.utility.decorator import member
 import asyncio
 
+asyncio.Semaphore
+
 class Scheduler:
     def __init__(self, value=config.parallel): ...
     def schedule(self, weight=1):              ...
@@ -23,7 +25,7 @@ def schedule(self, weight=1):
 
 @member(Scheduler)
 async def _acquire(self, weight=1):
-    if self._value >= weight and all(waiter.cancelled() for waiter in self._waiters.keys()):
+    if self._value >= weight and all(not waiter.cancelled() for waiter in self._waiters.keys()):
         self._value -= weight
         return
     future = asyncio.get_event_loop().create_future()

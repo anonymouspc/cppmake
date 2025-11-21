@@ -1,4 +1,5 @@
+from cppmake.basic.config     import config
 from cppmake.file.file_import import import_file
 
-module = import_file("cppmake.py", to_config=True)
-module.build()
+def main():
+    Package("main").build()
