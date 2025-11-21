@@ -1,4 +1,5 @@
 from cppmakelib import *
 
 def main():
-    Package("main").build()
+    main_package.is_built()
+    getattr(main_package.cppmake, config.target)()

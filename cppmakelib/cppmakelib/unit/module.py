@@ -6,7 +6,7 @@ from cppmakelib.execution.scheduler   import scheduler
 from cppmakelib.file.file_system      import parent_path, canonical_path, exist_file, exist_dir, modified_time_of_file
 from cppmakelib.logger.module_imports import module_imports_logger
 from cppmakelib.logger.module_mapper  import module_mapper_logger
-from cppmakelib.unit.package          import Package
+from cppmakelib.unit.package          import Package, main_package
 from cppmakelib.utility.algorithm     import recursive_collect
 from cppmakelib.utility.decorator     import member, namable, once, syncable, trace, unique
 from cppmakelib.utility.inline        import raise_
@@ -36,7 +36,7 @@ async def __ainit__(self, name, file):
     self.module_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.module_suffix}"
     self.object_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.object_suffix}"
     self.import_modules = await when_all([Module.__anew__(Module, import_) for import_ in await module_imports_logger.async_get_imports(type="module", name=self.name, file=self.file)])
-    self.import_package = await Package.__anew__(Package, "main" if self.file.startswith("module/") else self.name.split(':')[0].split('.')[0])
+    self.import_package = main_package if self.file.startswith("module/") else await Package.__anew__(Package, self.name.split(':')[0].split('.')[0])
     module_mapper_logger.log_mapper(name=self.name, file=self.file)
 
 @member(Module)
@@ -51,11 +51,12 @@ async def async_precompile(self):
             print(f"precompile module: {self.name}")
             await compiler.async_precompile(
                 self.file,
-                module_file =self.module_file,
-                object_file =self.object_file,
-                module_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file)),
-                include_dirs=recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir),
-                defines     =self.import_package.cppmake.defines if hasattr(self.import_package.cppmake, "defines") else None
+                module_file  =self.module_file,
+                object_file  =self.object_file,
+                module_dirs  =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file)),
+                include_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir),
+                compile_flags=self.import_package.compile_flags,
+                define_macros=self.import_package.define_macros
             )
 
 @member(Module)
@@ -82,6 +83,6 @@ def _name_to_file(name):
 
 @member(Module)
 async def _async_file_to_name(file):
-    return await module_imports_logger.async_get_export(type="module", file=file)                                         if re.match(r'^(package/\w+/)?module/.*\.cpp$', canonical_path(file)) and     exist_file(file) else \
+    return await module_imports_logger.async_get_export(type="module", file=canonical_path(file))                         if re.match(r'^(package/\w+/)?module/.*\.cpp$', canonical_path(file)) and     exist_file(file) else \
            raise_(LogicError(f"module is not found (with file = {file})"))                                                if re.match(r'^(package/\w+/)?module/.*\.cpp$', canonical_path(file)) and not exist_file(file) else \
            raise_(LogicError(f'module does not match "module/**.cpp" or "package/*/module/**.cpp" (with file = {file})'))

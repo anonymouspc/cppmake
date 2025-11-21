@@ -11,14 +11,14 @@ class Gcc:
     name          = "gcc"
     module_suffix = ".gcm"
     object_suffix = ".o"
-    def           __init__    (self, path="g++"):                                                                                 ...
-    async def     __ainit__   (self, path="g++"):                                                                                 ...
-    def             preprocess(self, file,                                                                           defines={}): ...
-    async def async_preprocess(self, file,                                                                           defines={}): ...
-    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                defines={}): ...
-    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                defines={}): ...
-    def             compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], defines={}): ...
-    async def async_compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], defines={}): ...
+    def           __init__    (self, path="g++"):                                                                                                         ...
+    async def     __ainit__   (self, path="g++"):                                                                                                         ...
+    def             preprocess(self, file,                                                                           compile_flags=[], define_macros={}): ...
+    async def async_preprocess(self, file,                                                                           compile_flags=[], define_macros={}): ...
+    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[], define_macros={}): ...
+    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[], define_macros={}): ...
+    def             compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], define_macros={}): ...
+    async def async_compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], define_macros={}): ...
 
 
 
@@ -30,7 +30,7 @@ async def __ainit__(self, path="g++"):
     self.compile_flags = [
        f"-std={config.std}", "-fmodules", 
         "-fdiagnostics-colors=always", "-fdiagnostics-format=sarif-stderr",
-        "-Wall", "-Wno-global-module", "-Wno-global-module-tu-local-exports",
+        "-Wall",
      *(["-O0", "-g", "-DDEBUG", "-fno-inline"] if config.type == "debug"   else
        ["-O3",       "-DNDEBUG"              ] if config.type == "release" else
        ["-Os"                                ] if config.type == "size"    else 
@@ -43,12 +43,13 @@ async def __ainit__(self, path="g++"):
 
 @member(Gcc)
 @syncable
-async def async_preprocess(self, code, defines={}):
+async def async_preprocess(self, code, compile_flags=[], define_macros={}):
     return await async_run(
         command=[
             self.path,
            *self.compile_flags,
-           *[f"-D{key}={value}" for key, value in defines.items()],
+           *compile_flags,
+           *[f"-D{key}={value}" for key, value in define_macros.items()],
             "-E", "-",
             "-o", "-"
         ],
@@ -59,16 +60,17 @@ async def async_preprocess(self, code, defines={}):
 
 @member(Gcc)
 @syncable
-async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], defines={}):
+async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}):
     create_dir(parent_path(module_file))
     create_dir(parent_path(object_file))
     await async_run(
         command=[
             self.path,
            *self.compile_flags,
-           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs    ],
-           *[f"-I{include_dir}"                                                for include_dir in include_dirs   ],
-           *[f"-D{key}={value}"                                                for key, value  in defines.items()],
+           *compile_flags,
+           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs          ],
+           *[f"-I{include_dir}"                                               for include_dir in include_dirs         ],
+           *[f"-D{key}={value}"                                               for key, value  in define_macros.items()],
             "-c", file,
             "-o", object_file
         ],
@@ -78,15 +80,16 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
 
 @member(Gcc)
 @syncable
-async def async_compile(self, file, executable_file, include_dirs=[], module_dirs=[], link_files=[], defines={}):
+async def async_compile(self, file, executable_file, include_dirs=[], module_dirs=[], link_files=[], compile_flags=[], define_macros={}):
     create_dir(parent_path(executable_file))
     await async_run(
         command=[
             self.path,
            *self.compile_flags,
-           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs    ],
-           *[f"-I{include_dir}"                                                for include_dir in include_dirs   ],
-           *[f"-D{key}={value}"                                                for key, value  in defines.items()],
+           *compile_flags,
+           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs          ],
+           *[f"-I{include_dir}"                                               for include_dir in include_dirs         ],
+           *[f"-D{key}={value}"                                               for key, value  in define_macros.items()],
             file,
            *self.link_flags,
            *link_files,

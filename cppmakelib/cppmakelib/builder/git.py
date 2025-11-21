@@ -41,7 +41,7 @@ async def async_status(self, git_dir):
         command=[
             self.path,
             "-C", git_dir,
-            "status"
+            "status", "--short"
         ],
         return_stdout=True
     )

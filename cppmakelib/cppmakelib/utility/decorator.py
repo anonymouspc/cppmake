@@ -81,6 +81,8 @@ def once(func):
     return once_func
 
 def syncable(func):
+    # Do not syncable a method when existing a same-named global function.
+    # For example, when we have 'run(command=...)', do not define 'class Executable: @syncable async_run(self)', use 'async_execute' instead.
     if type(func) != _MultiFunc:
         assert inspect.iscoroutinefunction(func)
         assert func.__name__.startswith("async_") or func.__name__.startswith("__a") # Should have pre-declaraed the corresponding methods.

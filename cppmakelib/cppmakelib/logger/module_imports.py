@@ -66,7 +66,7 @@ async def _async_update_content(self, type, file, name=None):
                 raise LogicError(f"module does not have an export declaration (with file = {file})")
             elif len(exports) >= 2:
                 raise LogicError(f"module has ambiguous export declarations (with file = {file}, exports = {{{', '.join(exports)}}})")
-            elif Module._name_to_file(exports[0]) != file or (name is not None and exports[0] != name):
+            elif (name is not None and exports[0] != name) or (name is None and not file.endswith(f"{exports[0].replace('.', '/').replace(':', '/')}.cpp")):
                 raise LogicError(f"module has inconsistent declaration (with file = {file}, export = {exports[0]})")
             export = exports[0]
             imports = [import_ if not import_.startswith(':') else f"{export.split(':')[0]}{import_}" for import_ in imports]

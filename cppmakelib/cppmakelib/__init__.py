@@ -23,5 +23,5 @@ from .system.windows   import Windows
 
 from .unit.executable  import Executable
 from .unit.module      import Module
-from .unit.package     import Package
+from .unit.package     import Package, main_package
 from .unit.source      import Source

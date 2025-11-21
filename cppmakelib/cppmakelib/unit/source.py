@@ -3,11 +3,11 @@ from cppmakelib.compiler.all          import compiler
 from cppmakelib.error.logic           import LogicError
 from cppmakelib.execution.operation   import when_all
 from cppmakelib.execution.scheduler   import scheduler
-from cppmakelib.file.file_system      import canonical_path, parent_path, exist_file, modified_time_of_file, iterate_dir
+from cppmakelib.file.file_system      import canonical_path, parent_path, exist_file, exist_dir, modified_time_of_file, iterate_dir
 from cppmakelib.logger.module_imports import module_imports_logger
 from cppmakelib.system.all            import system
 from cppmakelib.unit.module           import Module
-from cppmakelib.unit.package          import Package
+from cppmakelib.unit.package          import main_package
 from cppmakelib.utility.algorithm     import recursive_collect
 from cppmakelib.utility.decorator     import member, namable, once, syncable, trace, unique
 from cppmakelib.utility.inline        import raise_
@@ -35,7 +35,6 @@ async def __ainit__(self, name, file):
     self.file            = file
     self.executable_file = f"binary/{config.type}/source/{self.name}{system.executable_suffix}"
     self.import_modules  = await when_all([Module.__anew__(Module, name) for name in await module_imports_logger.async_get_imports(type="source", name=self.name, file=self.file)])
-    self.import_package  = await Package.__anew__(Package, "main")
 
 @member(Source)
 @syncable
@@ -49,11 +48,12 @@ async def async_compile(self):
             await compiler.async_compile(
                 self.file,
                 executable_file=self.executable_file,
-                module_dirs    =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file),                             root=False),
-                include_dirs   =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir,                           root=False),
-                link_files     =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.object_file,                                          root=False) + 
-                                recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: iterate_dir(module.import_package.lib_dir, recursive=False), root=False, flatten=True),
-                defines        =self.import_package.cppmake.defines if hasattr(self.import_package.cppmake, "defines") else None
+                module_dirs    =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file),                                                                                       root=False),
+                include_dirs   =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir                           if exist_dir(module.import_package.include_dir) else None, root=False),
+                link_files     =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.object_file,                                                                                                    root=False) + 
+                                recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: iterate_dir(module.import_package.lib_dir, recursive=False) if exist_dir(module.import_package.lib_dir)     else [],   root=False, flatten=True),
+                compile_flags  =main_package.compile_flags,
+                define_macros  =main_package.define_macros
             )
 
 @member(Source)
