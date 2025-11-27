@@ -18,7 +18,7 @@ for dir in ["cppmakelib", "cppmake"]:
     subprocess.run(f"pip install -e .", shell=True, cwd=dir)
 
     # Upload
-    subprocess.run(f"twine upload dist/* --username __token__ --password {open("pypi-token.txt").read()}", shell=True, cwd=dir)
+    subprocess.run(f"twine upload dist/* --username __token__ --password {open("pypi_token.txt").read()}", shell=True, cwd=dir)
     
 
 

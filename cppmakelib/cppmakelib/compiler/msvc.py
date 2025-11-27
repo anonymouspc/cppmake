@@ -31,10 +31,10 @@ async def _async_check(path):
     try:
         version = await async_run(command=[path], return_stdout=True)
         if "msvc" not in version.lower():
-            raise ConfigError(f'msvc is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+            raise ConfigError(f'msvc is not valid (with "{path}" outputs "{version.replace('\n', ' ')}")')
     except SubprocessError as error:
-        raise ConfigError(f'msvc is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+        raise ConfigError(f'msvc is not valid (with "{path}" outputs "{error.stderr.replace('\n', ' ')}" and exits {error.code})')
     except FileNotFoundError as error:
-        raise ConfigError(f'msvc is not installed (with "{path} --version" fails "{error}")')
+        raise ConfigError(f'msvc is not found (with "{path}" fails "{error}")')
 
     

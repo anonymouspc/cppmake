@@ -3,6 +3,7 @@ from cppmakelib.error.subprocess        import SubprocessError
 from cppmakelib.execution.scheduler     import Scheduler
 from cppmakelib.logger.compile_commands import compile_commands_logger
 from cppmakelib.logger.compile_output   import compile_output_logger
+from cppmakelib.utility.color           import yellow
 from cppmakelib.utility.decorator       import syncable
 import asyncio
 import sys
@@ -31,7 +32,7 @@ async def async_run(
     timeout       =None
 ):
     if print_command:
-        print(f">>> {' '.join(command)}")
+        print(yellow(' '.join(command)))
     if type(log_command) == bool and log_command == True:
         assert False
     if type(log_command) == tuple and log_command[0] == True:

@@ -16,9 +16,9 @@ class Macos:
 
 @member(Macos)
 def __init__(self):
-    Macos._check()
+    self._check()
 
 @member(Macos)
-def _check():
+def _check(self):
     if sys.platform != "darwin":
         raise ConfigError(f"system is not macos (with sys.platform = {sys.platform})")

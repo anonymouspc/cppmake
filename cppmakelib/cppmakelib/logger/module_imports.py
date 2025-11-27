@@ -57,10 +57,9 @@ async def async_get_export(self, type, file):
 async def _async_update_content(self, type, file, name=None):
     from cppmakelib.unit.module import Module
     if file not in self._content["file"].keys() or modified_time_of_file(file) > self._content["file"][file]["time"]:
-        async with scheduler.schedule():
-            code = open(file, 'r').read()
-            code = re.sub(r'^\s*#include\s*(?!<version>).*$', "", code, flags=re.MULTILINE)
-            code = await compiler.async_preprocess(code=code)
+        code = open(file, 'r').read()
+        code = re.sub(r'^\s*#include\s*(?!<version>).*$', "", code, flags=re.MULTILINE)
+        code = await compiler.async_preprocess(code=code)
         if type == "module":
             exports = re.findall(r'^\s*export\s+module\s+([\w\.:]+)\s*;\s*$',      code, flags=re.MULTILINE)
             imports = re.findall(r'^\s*(?:export\s+)?import\s+([\w\.:]+)\s*;\s*$', code, flags=re.MULTILINE)

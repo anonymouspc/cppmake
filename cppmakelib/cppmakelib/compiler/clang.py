@@ -5,6 +5,7 @@ from cppmakelib.execution.run      import async_run
 from cppmakelib.file.file_system   import parent_path, create_dir
 from cppmakelib.utility.decorator  import member, syncable
 from cppmakelib.utility.sarif      import make_sarif
+from cppmakelib.utility.version    import parse_version
 
 class Clang:
     name          = "clang"
@@ -24,20 +25,25 @@ class Clang:
 @member(Clang)
 @syncable
 async def __ainit__(self, path="clang++"):
-    await Clang._async_check(path)
     self.path = path
+    self.version = await self._async_get_version()
     self.compile_flags = [
        f"-std={config.std}",   
         "-fdiagnostics-color=always",
         "-Wall",
-     *(["-O0", "-g", "-DDEBUG", "-fno-inline"] if config.type == "debug"   else
-       ["-O3",       "-DNDEBUG"              ] if config.type == "release" else
-       ["-Os"                                ] if config.type == "size"    else 
-       [])
+        *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
+          ["-O3",                    ] if config.type == "release" else
+          ["-Os"                     ] if config.type == "size"    else 
+          [])
     ]
     self.link_flags = [
-     *(["-s"] if config.type == "release" or config.type == "size" else []),
+        *(["-s"] if config.type == "release" or config.type == "size" else []),
     ]
+    self.define_macros = {
+        **({"DEBUG" : "true"} if config.type == "debug"   else 
+           {"NDEBUG": "true"} if config.type == "release" else 
+           {})
+    }
 
 @member(Clang)
 @syncable
@@ -45,9 +51,8 @@ async def async_preprocess(self, code, compile_flags=[], define_macros={}):
     return await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-D{key}={value}" for key, value in define_macros.items()],
+            *(self.compile_flags + compile_flags),
+            *[f"-D{key}={value}" for key, value in (self.define_macros | define_macros).items()],
             "-E", "-x", "c++", "-",
             "-o", "-"
         ],
@@ -64,11 +69,10 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
     await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs          ],
-           *[f"-I{include_dir}"                     for include_dir in include_dirs         ],
-           *[f"-D{key}={value}"                     for key, value  in define_macros.items()],
+            *(self.compile_flags + compile_flags),
+            *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs                                 ],
+            *[f"-I{include_dir}"                     for include_dir in include_dirs                                ],
+            *[f"-D{key}={value}"                     for key, value  in (self.define_macros | define_macros).items()],
             "--precompile", "-x", "c++-module", file,
             "-o",                               module_file
         ],
@@ -78,7 +82,7 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
     await async_run(
         command=[
             self.path,
-           *[f"-fprebuilt-module-path={module_dir}" for module_dir in module_dirs],
+            *[f"-fprebuilt-module-path={module_dir}" for module_dir in module_dirs],
             "-c", module_file,
             "-o", object_file
         ]
@@ -91,14 +95,13 @@ async def async_compile(self, file, executable_file, module_dirs=[], include_dir
     await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs          ],
-           *[f"-I{include_dir}"                     for include_dir in include_dirs         ],
-           *[f"-D{key}={value}"                     for key, value  in define_macros.items()],
+            *(self.compile_flags + compile_flags),
+            *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs                                 ],
+            *[f"-I{include_dir}"                     for include_dir in include_dirs                                ],
+            *[f"-D{key}={value}"                     for key, value  in (self.define_macros | define_macros).items()],
             file,
-           *self.link_flags,
-           *link_files,
+            *self.link_flags,
+            *link_files,
             "-o", executable_file
         ],
         log_command=(True, file),
@@ -106,12 +109,16 @@ async def async_compile(self, file, executable_file, module_dirs=[], include_dir
     )
 
 @member(Clang)
-async def _async_check(path):
+async def _async_get_version(self):
     try:
-        version = await async_run(command=[path, "--version"], return_stdout=True)
-        if "clang" not in version.lower():
-            raise ConfigError(f'clang is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+        version_str = await async_run(command=[self.path, "--version"], return_stdout=True)
+        if "clang" not in version_str.lower() or "emcc" in version_str.lower():
+            raise ConfigError(f'clang is not valid (with "{self.path} --version" outputs "{version_str.replace('\n', ' ')}")')
+        version = parse_version(version_str)
+        if version < 21:
+            raise ConfigError(f'clang is too old (with version = {version}, requires >= 21')
+        return version
     except SubprocessError as error:
-        raise ConfigError(f'clang is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+        raise ConfigError(f'clang is not valid (with "{self.path} --version" outputs "{error.stderr.replace('\n', ' ')}" and exits {error.code})')
     except FileNotFoundError as error:
-        raise ConfigError(f'clang is not installed (with "{path} --version" fails "{error}")')
+        raise ConfigError(f'clang is not found (with "{self.path} --version" fails "{error}")')

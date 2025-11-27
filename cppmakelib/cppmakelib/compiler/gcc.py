@@ -5,6 +5,8 @@ from cppmakelib.execution.run         import async_run
 from cppmakelib.file.file_system      import parent_path, create_dir
 from cppmakelib.logger.module_mapper  import module_mapper_logger
 from cppmakelib.utility.decorator     import member, syncable
+from cppmakelib.utility.version       import parse_version
+
 
 
 class Gcc:
@@ -25,21 +27,26 @@ class Gcc:
 @member(Gcc)
 @syncable
 async def __ainit__(self, path="g++"):
-    await Gcc._async_check(path)
     self.path = path
+    self.version = await self._async_get_version()
     self.compile_flags = [
-       f"-std={config.std}", "-fmodules", 
-        "-fdiagnostics-colors=always", "-fdiagnostics-format=sarif-stderr",
-        "-Wall",
-     *(["-O0", "-g", "-DDEBUG", "-fno-inline"] if config.type == "debug"   else
-       ["-O3",       "-DNDEBUG"              ] if config.type == "release" else
-       ["-Os"                                ] if config.type == "size"    else 
-       []) 
+        f"-std={config.std}", "-fmodules", 
+         "-fdiagnostics-color=always", #"-fdiagnostics-format=sarif-stderr",
+         "-Wall",
+         *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
+           ["-O3",                    ] if config.type == "release" else
+           ["-Os"                     ] if config.type == "size"    else 
+           []) 
     ]
     self.link_flags = [
         "-lstdc++exp",
-     *(["-s"] if config.type == "release" or config.type == "size" else [])
+        *(["-s"] if config.type == "release" or config.type == "size" else [])
     ]
+    self.define_macros = {
+        **({"DEBUG"  : "true"} if config.type == "debug"   else
+           {"DNDEBUG": "true"} if config.type == "release" else
+           {})
+    }
 
 @member(Gcc)
 @syncable
@@ -47,10 +54,9 @@ async def async_preprocess(self, code, compile_flags=[], define_macros={}):
     return await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-D{key}={value}" for key, value in define_macros.items()],
-            "-E", "-",
+            *(self.compile_flags + compile_flags),
+            *[f"-D{key}={value}" for key, value in (self.define_macros | define_macros).items()],
+            "-E", "-x", "c++", "-",
             "-o", "-"
         ],
         input_stdin=code,
@@ -66,11 +72,10 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
     await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs          ],
-           *[f"-I{include_dir}"                                               for include_dir in include_dirs         ],
-           *[f"-D{key}={value}"                                               for key, value  in define_macros.items()],
+            *(self.compile_flags + compile_flags),
+            *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs                                 ],
+            *[f"-I{include_dir}"                                               for include_dir in include_dirs                                ],
+            *[f"-D{key}={value}"                                               for key, value  in (self.define_macros | define_macros).items()],
             "-c", file,
             "-o", object_file
         ],
@@ -85,14 +90,13 @@ async def async_compile(self, file, executable_file, include_dirs=[], module_dir
     await async_run(
         command=[
             self.path,
-           *self.compile_flags,
-           *compile_flags,
-           *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs          ],
-           *[f"-I{include_dir}"                                               for include_dir in include_dirs         ],
-           *[f"-D{key}={value}"                                               for key, value  in define_macros.items()],
+            *(self.compile_flags + compile_flags),
+            *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs                                 ],
+            *[f"-I{include_dir}"                                               for include_dir in include_dirs                                ],
+            *[f"-D{key}={value}"                                               for key, value  in (self.define_macros | define_macros).items()],
             file,
-           *self.link_flags,
-           *link_files,
+            *self.link_flags,
+            *link_files,
             "-o", executable_file
         ],
         log_command=(True, file),
@@ -100,12 +104,16 @@ async def async_compile(self, file, executable_file, include_dirs=[], module_dir
     )
 
 @member(Gcc)
-async def _async_check(path):
+async def _async_get_version(self):
     try:
-        version = await async_run(command=[path, "--version"], return_stdout=True)
-        if "gcc" not in version.lower():
-            raise ConfigError(f'gcc is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+        version_str = await async_run(command=[self.path, "--version"], return_stdout=True)
+        if "gcc" not in version_str.lower() or "emcc" in version_str.lower():
+            raise ConfigError(f'gcc is not valid (with "{self.path} --version" outputs "{version_str.replace('\n', ' ')}")')
+        version = parse_version(version_str)
+        if version < 15:
+            raise ConfigError(f'gcc is too old (with version = {version}, requires >= 15)')
+        return version            
     except SubprocessError as error:
-        raise ConfigError(f'gcc is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+        raise ConfigError(f'gcc is not valid (with "{self.path} --version" outputs "{error.stderr.replace('\n', ' ')}" and exits {error.code})')
     except FileNotFoundError as error:
-        raise ConfigError(f'gcc is not installed (with "{path} --version" fails "{error}")')
+        raise ConfigError(f'gcc is not found (with "{self.path} --version" fails "{error}")')

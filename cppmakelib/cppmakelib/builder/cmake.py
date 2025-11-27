@@ -1,10 +1,12 @@
 from cppmakelib.basic.config       import config
+from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.execution.run      import async_run
 from cppmakelib.file.file_system   import parent_path, create_dir, remove_dir
 from cppmakelib.utility.algorithm  import recursive_collect
 from cppmakelib.utility.decorator  import member, syncable
+from cppmakelib.utility.version    import parse_version
 
 class Cmake:
     name = "cmake"
@@ -20,8 +22,8 @@ cmake = ...
 @member(Cmake)
 @syncable
 async def __ainit__(self, path="cmake"):
-    await Cmake._async_check(path)
     self.path = path
+    self.version = await self._async_get_version()
 
 @member(Cmake)
 @syncable
@@ -31,13 +33,15 @@ async def async_build(self, package, dir=".", args=[]):
         await async_run(
             command=[
                 self.path,
-                "-S", package.git_dir,
+                "-S", f"{package.git_dir}/{dir}",
                 "-B", package.build_dir,
                f"-DCMAKE_BUILD_TYPE={config.type}",
+            # f"-DCMAKE_CXX_COMPILER={compiler.path}",
+            # f"-DCMAKE_CXX_FLAGS={' '.join(compiler.compile_flags + package.compile_flags)}",
                f"-DCMAKE_PREFIX_PATH={';'.join(recursive_collect(package, next=lambda package: package.import_packages, collect=lambda package: package.install_dir, root=False))}",
                f"-DCMAKE_INSTALL_PREFIX={package.install_dir}",
                 "-DCMAKE_INSTALL_LIBDIR=lib",
-               *args
+                *args
             ]
         )
     except:
@@ -67,14 +71,15 @@ async def async_build(self, package, dir=".", args=[]):
         raise
 
 @member(Cmake)
-async def _async_check(path):
+async def _async_get_version(self):
     try:
-        version = await async_run(command=[path, "--version"], return_stdout=True)
-        if "cmake" not in version.lower():
-            raise ConfigError(f'cmake is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+        version_str = await async_run(command=[self.path, "--version"], return_stdout=True)
+        if "cmake" not in version_str.lower():
+            raise ConfigError(f'cmake is not valid (with "{self.path} --version" outputs "{version_str.replace('\n', ' ')}")')
+        return parse_version(version_str)
     except SubprocessError as error:
-        raise ConfigError(f'cmake is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+        raise ConfigError(f'cmake is not valid (with "{self.path} --version" outputs "{error.stderr.replace('\n', ' ')}" and exits {error.code})')
     except FileNotFoundError as error:
-        raise ConfigError(f'cmake is not installed (with "{path} --version" fails "{error}")')
+        raise ConfigError(f'cmake is not found (with "{self.path} --version" fails "{error}")')
 
 cmake = Cmake()

@@ -36,19 +36,21 @@ def __exit__(self):
 @syncable
 async def async_log_status(self, name, git_dir):
     self._content[name] = {
-        "time"           : time.time(),
-        "config.compiler": config.compiler,
-        "config.std"     : config.std,
-        "git.log"        : await git.async_log   (git_dir) if git_dir is not None else None
+        "time"                  : time.time(),
+        "compiler.path"         : compiler.path,
+        "compiler.version"      : str(compiler.version),
+        "compiler.compile_flags": compiler.compile_flags,
+        "git.log"               : await git.async_log(git_dir) if git_dir is not None else None
     }
 
 @member(PackageStatusLogger)
 @syncable
 async def async_get_status(self, name, git_dir, cppmake_file):
-    return name in self._content.keys()                                                                         and \
-           (cppmake_file is None or modified_time_of_file(cppmake_file) <= self._content[name]["time"])         and \
-           config.std      == self._content[name]["config.std"]                                                 and \
-           config.compiler == self._content[name]["config.compiler"]                                            and \
+    return name in self._content.keys()                                                                      and \
+           (cppmake_file is None or modified_time_of_file(cppmake_file) <= self._content[name]["time"])      and \
+           compiler.path          == self._content[name]["compiler.path"]                                    and \
+           str(compiler.version)  == self._content[name]["compiler.version"]                                 and \
+           compiler.compile_flags == self._content[name]["compiler.compile_flags"]                           and \
            (await git.async_log(git_dir) == self._content[name]["git.log"] if git_dir is not None else True)
 
 package_status_logger = PackageStatusLogger()

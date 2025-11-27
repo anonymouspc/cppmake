@@ -18,8 +18,8 @@ def __init__(self):
     self._writer = open(f"binary/{config.type}/cache/module_mapper.txt", 'w')
 
 @member(ModuleMapperLogger)
-def log_mapper(self, name, file):
-    self._writer.write(f"{name} {file}\n")
+def log_mapper(self, name, module_file):
+    self._writer.write(f"{name} {module_file}\n")
     self._writer.flush()
 
 @member(ModuleMapperLogger)

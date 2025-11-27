@@ -4,6 +4,7 @@ import sys
 
 class SubprocessError(Exception):
     def __init__     (self, stderr, is_stderr_printed, code): ...
+    def __str__      (self):                                  ...
     def __terminate__():                                      ...
 
 
@@ -15,6 +16,10 @@ def __init__(self, stderr, is_stderr_printed, code):
     self.is_stderr_printed = is_stderr_printed
     self.code              = code
     on_terminate(SubprocessError.__terminate__)
+
+@member(SubprocessError)
+def __str__(self):
+    return self.stderr
 
 @member(SubprocessError)
 def __terminate__():

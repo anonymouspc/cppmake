@@ -37,7 +37,7 @@ async def __ainit__(self, name, file):
     self.object_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.object_suffix}"
     self.import_package = await Package.__anew__(Package, "main" if self.file.startswith("module/") else self.name.split(':')[0].split('.')[0])
     self.import_modules = await when_all([Module.__anew__(Module, import_) for import_ in await module_imports_logger.async_get_imports(type="module", name=self.name, file=self.file)])
-    module_mapper_logger.log_mapper(name=self.name, file=self.file)
+    module_mapper_logger.log_mapper(name=self.name, module_file=self.module_file)
 
 @member(Module)
 @syncable

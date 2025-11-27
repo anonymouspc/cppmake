@@ -1,5 +1,5 @@
 from cppmakelib.basic.exit        import on_terminate, rethrow_exception, current_exception
-from cppmakelib.utility.color     import red
+from cppmakelib.utility.color     import red, bold
 from cppmakelib.utility.decorator import member
 import sys
 
@@ -19,4 +19,4 @@ def __terminate__():
     try:
         rethrow_exception(current_exception())
     except LogicError as error:
-        print(f"{red("fatal error")}: {error}", file=sys.stderr)
+        print(f"{red(bold("fatal error:"))} {error}", file=sys.stderr)

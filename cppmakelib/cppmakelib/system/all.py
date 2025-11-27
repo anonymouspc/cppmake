@@ -15,7 +15,4 @@ for System in (Linux, Macos, Windows):
     except ConfigError as error:
         suberrors += [error]
 else:
-    raise ConfigError(
-        f'system is not supported, because\n'
-        ''.join([f'  {error}\n' for error in suberrors])
-    )
+    raise ConfigError(f'system is not supported, because\n{'\n'.join([f" {error}" for error in suberrors])}')

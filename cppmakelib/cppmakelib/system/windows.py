@@ -16,9 +16,9 @@ class Windows:
 
 @member(Windows)
 def __init__(self):
-    Windows._check()
+    self._check()
 
 @member(Windows)
-def _check():
-    if sys.platform != "darwin":
+def _check(self):
+    if sys.platform != "win32":
         raise ConfigError(f"system is not windows (with sys.platform = {sys.platform})")

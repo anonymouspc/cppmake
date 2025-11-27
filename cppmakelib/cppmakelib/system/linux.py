@@ -16,9 +16,9 @@ class Linux:
 
 @member(Linux)
 def __init__(self):
-    Linux._check()
+    self._check()
 
 @member(Linux)
-def _check():
+def _check(self):
     if sys.platform != "linux":
         raise ConfigError(f"system is not linux (with sys.platform = {sys.platform})")

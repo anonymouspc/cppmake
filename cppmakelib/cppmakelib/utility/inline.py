@@ -6,3 +6,9 @@ def assert_(value, message=None):
 
 def raise_(error):
     raise error
+
+def value_or(func, fallback):
+    try:
+        return func()
+    except:
+        return fallback

@@ -38,6 +38,7 @@ async def __ainit__(self, name, dir):
     self.include_dir     = f"binary/{config.type}/package/{self.name}/install/include"
     self.lib_dir         = f"binary/{config.type}/package/{self.name}/install/lib"
     self.compile_flags   = []
+    self.link_flags      = []
     self.define_macros   = {}
     self.cppmake         = import_file(self.cppmake_file, globals={"package": self}) if self.cppmake_file is not None else None
     self.export_modules  = ...

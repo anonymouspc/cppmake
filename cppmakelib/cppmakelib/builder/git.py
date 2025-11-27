@@ -2,6 +2,7 @@ from cppmakelib.error.config        import ConfigError
 from cppmakelib.error.subprocess    import SubprocessError
 from cppmakelib.execution.run       import async_run
 from cppmakelib.utility.decorator   import member, syncable
+from cppmakelib.utility.version     import parse_version
 
 class Git:
     name = "git"
@@ -19,8 +20,8 @@ git = ...
 @member(Git)
 @syncable
 async def __ainit__(self, path="git"):
-    await Git._async_check(path)
     self.path = path
+    self.version = await self._async_get_version()
 
 @member(Git)
 @syncable
@@ -47,14 +48,15 @@ async def async_status(self, git_dir):
     )
 
 @member(Git)
-async def _async_check(path):
+async def _async_get_version(self):
     try:
-        version = await async_run(command=[path, "--version"], return_stdout=True)
-        if "git" not in version.lower():
-            raise ConfigError(f'git is not valid (with "{path} --version" outputs "{version.replace('\n', ' ')}")')
+        version_str = await async_run(command=[self.path, "--version"], return_stdout=True)
+        if "git" not in version_str.lower():
+            raise ConfigError(f'git is not valid (with "{self.path} --version" outputs "{version_str.replace('\n', ' ')}")')
+        return parse_version(version_str)
     except SubprocessError as error:
-        raise ConfigError(f'git is not valid (with "{path} --version" outputs "{str(error).replace('\n', ' ')}" and exits {error.code})')
+        raise ConfigError(f'git is not valid (with "{self.path} --version" outputs "{error.stderr.replace('\n', ' ')}" and exits {error.code})')
     except FileNotFoundError as error:
-        raise ConfigError(f'git is not installed (with "{path} --version" fails "{error}")')
+        raise ConfigError(f'git is not found (with "{self.path} --version" fails "{error}")')
 
 git = Git()
