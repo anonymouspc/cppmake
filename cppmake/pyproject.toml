@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cppmake"
-version = "17"
+version = "29"
 description = "A modern C++ builder based on C++20 Modules."
 authors = [{name = "anonymouspc", email = "shyeyian@petalmail.com"}]
 readme = "readme.md"
@@ -13,5 +13,5 @@ license = "MIT"
 scripts = {cppmake = "cppmake.__main__:main"}
 dependencies = ["cppmakelib"]
 
-[tool.setuptools]
-packages = ["cppmake"]
+[tool.setuptools.packages.find]
+include = ["cppmake*"]
