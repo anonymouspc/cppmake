@@ -59,12 +59,12 @@ async def async_get_export(self, file):
 @member(UnitPreprocessLogger)
 async def _async_update_content(self, type, file, name=None):
     updated = file in self._content["file"].keys()                                                 and \
-              modified_time_of_file(file) <= self._content["file"][file]["time"                  ] and \
               compiler.name               == self._content["file"][file]["compiler.name"         ] and \
               compiler.path               == self._content["file"][file]["compiler.path"         ] and \
               compiler.version.__str__()  == self._content["file"][file]["compiler.version"      ] and \
               compiler.compile_flags      == self._content["file"][file]["compiler.compile_flags"] and \
-              compiler.define_macros      == self._content["file"][file]["compiler.define_macros"]
+              compiler.define_macros      == self._content["file"][file]["compiler.define_macros"] and \
+              modified_time_of_file(file) <= self._content["file"][file]["time"                  ]
     if not updated:
         code = open(file, 'r').read()
         code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
@@ -86,7 +86,6 @@ async def _async_update_content(self, type, file, name=None):
             export = None
             imports = re.findall(r'^\s*(?:export\s+)?import\s+([\w\.:]+)\s*;\s*$', code, flags=re.MULTILINE)
         self._content["file"][file] = {
-            "time"                  : time.time(),
             "unit.type"             : type,
             "unit.name"             : name,
             "unit.export"           : export,
@@ -96,6 +95,7 @@ async def _async_update_content(self, type, file, name=None):
             "compiler.version"      : compiler.version.__str__(),
             "compiler.compile_flags": compiler.compile_flags,
             "compiler.define_macros": compiler.define_macros,
+            "time"                  : time.time(),
         }
         self._content["unit"][type][name] = {
             "unit.file": file

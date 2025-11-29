@@ -1,3 +1,3 @@
-export module B:D;
+export module ddd;
 
 export char d() { return 'd'; }
