@@ -108,7 +108,7 @@ easily extend it with any other Python code.
 
 # Integrating third-party packages
 
-Third-party packages should be located `package/`, for example
+Third-party packages should be located in `package/`, for example
 ```
 ├── module
 │   ├── aaa.cpp
@@ -140,7 +140,7 @@ Third-party packages should be located `package/`, for example
 └── cppmake.py
 ```
 
-In `package/boost/cppmake.py` we can define a `build()` function to describe how it should be built. For example:
+In `package/boost/cppmake.py` we can define a `build()` function to describe how this package should be built. For example:
 ```py
 # package/boost/cppmake.py
 from cppmakelib import *
