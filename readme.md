@@ -119,13 +119,26 @@ Third-party packages should be located `package/`, for example
 │   └── main.cpp
 ├── package
 │   ├── boost
-
+│   │   ├── git
+│   │   ├── module
+│   │   │   ├── boost.cpp // boost
+│   │   │   └── boost
+│   │   │       ├── asio.cpp // boost.asio
+│   │   │       ├── beast.cpp // boost.beast
+│   │   │       ├── numeric.cpp // boost.numeric
+│   │   │       │   ├── interval.cpp // boost.numeric.interval
+│   │   │       │   └── ublas.cpp // boost.numeric.ublas
+│   │   │       └── spirit.cpp // boost.spirit
+│   │   │           ├── classic.cpp // boost.spirit:classic
+│   │   │           ├── karma.cpp // boost.spirit:karma
+│   │   │           ├── qi.cpp // boost.spirit:qi
+│   │   │           └── x3.cpp // boost.spirit:x3
+│   │   └── cppmake.py
 │   └── eigen
 └── cppmake.py
 ```
 
-For third-party packages, define a `build()` function in the package’s
-`cppmake.py` to describe how it should be built. For example:
+A `build()` function in the package’s `cppmake.py` needs to be defined to describe how it should be built. For example:
 ```py
 # package/boost/cppmake.py
 from cppmakelib import *
