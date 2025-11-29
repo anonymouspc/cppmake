@@ -25,7 +25,8 @@ python install.py
 # Getting Started
 
 In a cppmake project: 
-- module `aaa.bbb:ccc` should be placed at `module/aaa/bbb/ccc.cpp`
+- module `aaa.bbb` should be placed at `module/aaa/bbb.cpp`
+- module `aaa:ccc` should be placed at `module/aaa/ccc.cpp`
 - source `main` should be placed at `source/main.cpp`
 - `std` module will be auto-installed.
 
@@ -34,9 +35,9 @@ For example:
 ├── module
 │   ├── aaa.cpp
 │   ├── aaa
-│   │   ├── xxx.cpp // aaa.xxx
-│   │   └── yyy.cpp // aaa:yyy
-│   └── bbb.cpp
+│   │   ├── bbb.cpp // aaa.bbb
+│   │   └── ccc.cpp // aaa:ccc
+│   └── ddd.cpp
 ├── source
 │   └── main.cpp
 └── cppmake.py
@@ -97,13 +98,13 @@ def build(): # select a source file to compile
         Source("linux").compile()
 
 def test(): # compile and test all units
-    for file in iterate_dir("source/test"):
+    for file in iterate_dir("source/test", recursive=True):
         Source(file=file).compile()
         Executable(file=file).run()
 ```
 This `cppmake.py` defines 2 targets (switchable via
 `cppmake --target=build|test`) and several configuration rules. You can
-easily extend it using the full Python environment.
+easily extend it with any other Python code.
 
 # Integrating third-party packages
 
@@ -112,9 +113,9 @@ Third-party packages should be located `package/`, for example
 ├── module
 │   ├── aaa.cpp
 │   ├── aaa
-│   │   ├── mmm.cpp // aaa.mmm
-│   │   └── nnn.cpp // aaa:nnn
-│   └── bbb.cpp
+│   │   ├── bbb.cpp // aaa.bbb
+│   │   └── ccc.cpp // aaa:ccc
+│   └── ddd.cpp
 ├── source
 │   └── main.cpp
 ├── package
