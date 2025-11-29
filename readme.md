@@ -120,21 +120,22 @@ Third-party packages should be located `package/`, for example
 ├── package
 │   ├── boost
 │   │   ├── git
+│   │   │   └── [git clone]
 │   │   ├── module
 │   │   │   ├── boost.cpp // boost
 │   │   │   └── boost
 │   │   │       ├── asio.cpp // boost.asio
 │   │   │       ├── beast.cpp // boost.beast
-│   │   │       ├── numeric.cpp // boost.numeric
-│   │   │       │   ├── interval.cpp // boost.numeric.interval
-│   │   │       │   └── ublas.cpp // boost.numeric.ublas
-│   │   │       └── spirit.cpp // boost.spirit
-│   │   │           ├── classic.cpp // boost.spirit:classic
-│   │   │           ├── karma.cpp // boost.spirit:karma
-│   │   │           ├── qi.cpp // boost.spirit:qi
-│   │   │           └── x3.cpp // boost.spirit:x3
+│   │   │       └── numeric.cpp // boost.numeric
+│   │   │           ├── interval.cpp // boost.numeric.interval
+│   │   │           └── ublas.cpp // boost.numeric.ublas
 │   │   └── cppmake.py
 │   └── eigen
+│       ├── git
+│       │   └── [git clone]
+│       ├── module
+│       │   └── eigen.cpp // eigen
+│       └── cppmake.py
 └── cppmake.py
 ```
 
