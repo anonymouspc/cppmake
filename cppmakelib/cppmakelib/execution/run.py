@@ -2,7 +2,6 @@ from cppmakelib.basic.config            import config
 from cppmakelib.error.subprocess        import SubprocessError
 from cppmakelib.execution.scheduler     import Scheduler
 from cppmakelib.logger.compile_commands import compile_commands_logger
-from cppmakelib.logger.compile_output   import compile_output_logger
 from cppmakelib.utility.color           import yellow
 from cppmakelib.utility.decorator       import syncable
 import asyncio
@@ -21,23 +20,20 @@ async def async_run(
     command,
     cwd           ='.', 
     print_command =config.verbose,
-    log_command   =False, # or (True, file)
+    log_command   =(False, None), # (True, file)
     run_command   =True,
     input_stdin   =None,
     print_stdout  =config.verbose,
-    log_stdout    =False, # or True, or (True, processor)
     return_stdout =False,
     print_stderr  =True,
-    log_stderr    =False, # or True, or (True, processor)
+    log_stderr    =(False, None), # (True, callback)
     return_stderr =False,
     timeout       =None
 ):
     async with _internal_scheduler.schedule():
         if print_command:
             print(yellow(' '.join(command)))
-        if type(log_command) == bool and log_command == True:
-            assert False
-        if type(log_command) == tuple and log_command[0] == True:
+        if log_command[0] == True:
             compile_commands_logger.log_command(command=command, file=log_command[1])
         if run_command:
             proc = await asyncio.subprocess.create_subprocess_exec(
@@ -87,17 +83,12 @@ async def async_run(
                 except ProcessLookupError:
                     pass
                 raise TimeoutError(f"process {' '.join(command)} timeouts after {timeout} seconds")
-            if (type(log_stdout) == bool  and log_stdout    == True) or \
-            (type(log_stdout) == tuple and log_stdout[0] == True):
-                compile_output_logger.log_output(stdout if type(log_stdout) == bool else log_stdout[1](stdout))
-            if (type(log_stderr) == bool  and log_stderr    == True) or \
-            (type(log_stderr) == tuple and log_stderr[0] == True):
-                compile_output_logger.log_output(stderr if type(log_stderr) == bool else log_stderr[1](stderr))
+            if log_stderr[0] == True:
+                log_stderr[1](code, stderr) 
             if code == 0:
                 return (stdout, stderr) if return_stdout and return_stderr else \
                         stdout          if return_stdout                   else \
                                 stderr  if                   return_stderr else \
                         None
             else:
-                compile_output_logger.log_output(stderr)
                 raise SubprocessError(stderr=stderr, is_stderr_printed=print_stderr, code=code)

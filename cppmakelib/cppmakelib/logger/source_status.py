@@ -58,7 +58,6 @@ def get_status(self, source):
            source.link_flags                             == self._content[source.name]["source.link_flags"     ]                                                   and \
            source.define_macros                          == self._content[source.name]["source.define_macros"  ]                                                   and \
            modified_time_of_file(source.file           ) <= self._content[source.name]["time"                  ]                                                   and \
-          (modified_time_of_file(source.object_file    ) <= self._content[source.name]["time"                  ] if exist_file(source.object_file    ) else False) and \
           (modified_time_of_file(source.executable_file) <= self._content[source.name]["time"                  ] if exist_file(source.executable_file) else False)
 
 source_status_logger = SourceStatusLogger()
