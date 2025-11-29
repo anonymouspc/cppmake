@@ -44,7 +44,6 @@ async def __ainit__(self, path="clang++"):
           [])
     ]
     self.link_flags = [
-       f"-fuse-ld={system.linker_path}",
         *(["-s"         ] if config.type == "release" or config.type == "size" else []),
         *(["-lstdc++exp"] if self.stdlib == "libstdc++"                        else [])
     ]

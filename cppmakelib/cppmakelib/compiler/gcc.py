@@ -44,8 +44,8 @@ async def __ainit__(self, path="g++"):
            []) 
     ]
     self.link_flags = [
-       f"-fuse-ld={system.linker_path}",
-        *(["-s"] if config.type == "release" or config.type == "size" else []),
+        *([f"-fuse-ld={system.linker_path}"] if system.linker_path != "ld"                        else []),
+        *(["-s"                            ] if config.type == "release" or config.type == "size" else []),
         "-lstdc++exp"
     ]
     self.define_macros = {

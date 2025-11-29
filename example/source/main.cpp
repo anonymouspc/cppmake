@@ -1,7 +1,8 @@
-import hello;
-import world;
+import std;
+import A;
+import B;
 
 int main ( )
 {
-    hello(world);
+    std::println("hello, {}, {}, {} and {}!", a(), b(), c(), d());
 }
