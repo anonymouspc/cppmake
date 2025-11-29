@@ -1,3 +1,3 @@
-export module B.C;
+export module aaa:ccc;
 
 export char c() { return 'c'; }

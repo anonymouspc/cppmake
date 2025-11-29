@@ -1,8 +1,8 @@
 import std;
-import A;
-import B;
+import aaa;
+import ddd;
 
 int main ( )
 {
-    std::println("hello, {}, {}, {} and {}!", a(), b(), c(), d());
+    std::println("hello, {}{}{}{}!", a(), b(), c(), d());
 }
