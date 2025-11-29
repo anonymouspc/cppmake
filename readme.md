@@ -38,8 +38,8 @@ For example:
 ├── module
 │   ├── aaa.cpp
 │   ├── aaa
-│   │   ├── mmm.cpp // aaa.mmm
-│   │   └── nnn.cpp // aaa:nnn
+│   │   ├── xxx.cpp // aaa.xxx
+│   │   └── yyy.cpp // aaa:yyy
 │   └── bbb.cpp
 ├── source
 │   └── main.cpp
