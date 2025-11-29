@@ -46,7 +46,7 @@ Then, run
 ```sh
 cppmake
 ```
-The output will be generated in the binary directory.
+The output will be generated in the `binary/` directory.
 
 # Advanced
 
