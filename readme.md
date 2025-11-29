@@ -97,7 +97,7 @@ def build(): # select a source file to compile
         Source("linux").compile()
 
 def test(): # compile and test all units
-    for file in iterate_dir("source/test"):
+    for file in iterate_dir("source/test", recursive=True):
         Source(file=file).compile()
         Executable(file=file).run()
 ```
