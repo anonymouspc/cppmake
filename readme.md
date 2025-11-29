@@ -30,6 +30,7 @@ In a cppmake project:
   - source `main` should be placed at `source/main.cpp`
 - A C++ package is either modularized, or requires a cppmake.py 
   - package boost should be located at `package/boost`
+  - `std` package will be auto-installed.
 
 For example:
 ```
