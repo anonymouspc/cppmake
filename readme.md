@@ -25,16 +25,12 @@ python install.py
 # Getting Started
 
 In a cppmake project: 
-- A C++ file is either a module or a source.
-  - module `aaa.bbb:ccc` should be placed at `module/aaa/bbb/ccc.cpp`
-  - source `main` should be placed at `source/main.cpp`
-- A C++ package is either modularized, or requires a cppmake.py 
-  - package boost should be located at `package/boost`
-  - `std` package will be auto-installed.
+- module `aaa.bbb:ccc` should be placed at `module/aaa/bbb/ccc.cpp`
+- source `main` should be placed at `source/main.cpp`
+- `std` module will be auto-installed.
 
 For example:
 ```
-.
 ├── module
 │   ├── aaa.cpp
 │   ├── aaa
@@ -43,9 +39,6 @@ For example:
 │   └── bbb.cpp
 ├── source
 │   └── main.cpp
-├── package
-│   ├── boost
-│   └── eigen
 └── cppmake.py
 ```
 Then, run
@@ -111,6 +104,25 @@ def test(): # compile and test all units
 This `cppmake.py` defines 2 targets (switchable via
 `cppmake --target=build|test`) and several configuration rules. You can
 easily extend it using the full Python environment.
+
+# Integrating third-party packages
+
+Third-party packages should be located `package/`, for example
+```
+├── module
+│   ├── aaa.cpp
+│   ├── aaa
+│   │   ├── mmm.cpp // aaa.mmm
+│   │   └── nnn.cpp // aaa:nnn
+│   └── bbb.cpp
+├── source
+│   └── main.cpp
+├── package
+│   ├── boost
+
+│   └── eigen
+└── cppmake.py
+```
 
 For third-party packages, define a `build()` function in the package’s
 `cppmake.py` to describe how it should be built. For example:
