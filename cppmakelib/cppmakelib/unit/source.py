@@ -36,6 +36,8 @@ async def __ainit__(self, name, file):
     self.file            = file
     self.object_file     = f"binary/{config.type}/source/{self.name}{compiler.object_suffix}"
     self.executable_file = f"binary/{config.type}/source/{self.name}{system.executable_suffix}"
+    self.diagnose_file   = f"binary/cache/source.{self.name}.sarif"
+    self.optimize_file   = f"binary/cache/source.{self.name}.optim"
     self.import_package  = await Package.__anew__(Package, "main")
     self.import_modules  = await when_all([Module.__anew__(Module, name) for name in await unit_preprocess_logger.async_get_imports(unit=self)])
     self.compile_flags   = self.import_package.compile_flags
@@ -53,18 +55,16 @@ async def async_compile(self):
             print(f"compile source: {self.name}")
             await compiler.async_compile(
                 self.file,
-                object_file  =self.object_file,
-                module_dirs  =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file),                                                             root=False),
-                include_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir if exist_dir(module.import_package.include_dir) else None, root=False),
-                compile_flags=self.compile_flags,
-                define_macros=self.define_macros
-            )
-            await compiler.async_link(
-                self.object_file,
                 executable_file=self.executable_file,
+                module_dirs    =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file),                                                                                 root=False),
+                include_dirs   =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir if exist_dir(module.import_package.include_dir) else None,                     root=False),
                 link_files     =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.object_file,                                                                                              root=False) + 
                                 recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: iterate_dir(module.import_package.lib_dir, recursive=False) if exist_dir(module.import_package.lib_dir) else [], root=False, flatten=True), 
-                link_flags     =self.link_flags  
+                compile_flags  =self.compile_flags,
+                link_flags     =self.link_flags,
+                define_macros  =self.define_macros,
+                diagnose_file  =self.diagnose_file,
+                optimize_file  =self.optimize_file
             )
             source_status_logger.log_status(source=self)
 

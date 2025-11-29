@@ -66,9 +66,7 @@ async def _async_update_content(self, type, file, name=None):
               compiler.define_macros      == self._content["file"][file]["compiler.define_macros"] and \
               modified_time_of_file(file) <= self._content["file"][file]["time"                  ]
     if not updated:
-        code = open(file, 'r').read()
-        code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
-        code = await compiler.async_preprocess(code=code)
+        code = await compiler.async_preprocess(file=file)
         if type == "module":
             exports = re.findall(r'^\s*(?:export\s+)?module\s+([\w\.:]+)\s*;\s*$', code, flags=re.MULTILINE)
             imports = re.findall(r'^\s*(?:export\s+)?import\s+([\w\.:]+)\s*;\s*$', code, flags=re.MULTILINE)

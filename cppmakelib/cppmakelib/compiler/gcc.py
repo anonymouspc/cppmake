@@ -13,18 +13,16 @@ class Gcc:
     name          = "gcc"
     module_suffix = ".gcm"
     object_suffix = ".o"
-    def           __init__    (self, path="g++"):                                                                                          ...
-    async def     __ainit__   (self, path="g++"):                                                                                          ...
-    def             preprocess(self, code,                                                            compile_flags=[], define_macros={}): ...
-    async def async_preprocess(self, code,                                                            compile_flags=[], define_macros={}): ...
-    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    def             compile   (self, file,              object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    async def async_compile   (self, file,              object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    def             link      (self, file, executable_file,                          link_files  =[], link_flags   =[]                  ): ...
-    async def async_link      (self, file, executable_file,                          link_files  =[], link_flags   =[]                  ): ...
-    def             std_module(self):                                                                                                      ...
-    async def async_std_module(self):                                                                                                      ...
+    def           __init__    (self, path="g++"):                                                                                                                                                                ...
+    async def     __ainit__   (self, path="g++"):                                                                                                                                                                ...
+    def             preprocess(self, file,                                                                           compile_flags=[],                define_macros={}):                                         ...
+    async def async_preprocess(self, file,                                                                           compile_flags=[],                define_macros={}):                                         ...
+    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[],                define_macros={}, diagnose_file=None, optimize_file=None): ...
+    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[],                define_macros={}, diagnose_file=None, optimize_file=None): ...
+    def             compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None): ...
+    async def async_compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None): ...
+    def             std_module(self):                                                                                                                                                                            ...
+    async def async_std_module(self):                                                                                                                                                                            ...
 
 
 
@@ -36,7 +34,7 @@ async def __ainit__(self, path="g++"):
     self.stdlib  = "libstdc++"
     self.compile_flags = [
         f"-std={config.std}", "-fmodules", 
-         "-fdiagnostics-color=always", #"-fdiagnostics-format=sarif-stderr",
+         "-fdiagnostics-color=always",
          "-Wall",
          *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
            ["-O3",                    ] if config.type == "release" else
@@ -56,7 +54,9 @@ async def __ainit__(self, path="g++"):
 
 @member(Gcc)
 @syncable
-async def async_preprocess(self, code, compile_flags=[], define_macros={}):
+async def async_preprocess(self, file, compile_flags=[], define_macros={}):
+    code = open(file, 'r').read()
+    code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
     return await async_run(
         command=[
             self.path,
@@ -72,9 +72,11 @@ async def async_preprocess(self, code, compile_flags=[], define_macros={}):
 
 @member(Gcc)
 @syncable
-async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}):
+async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}, diagnose_file=None, optimize_file=None):
     create_dir(parent_path(module_file))
     create_dir(parent_path(object_file))
+    create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
+    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
@@ -82,46 +84,40 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
             *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs                                 ],
             *[f"-I{include_dir}"                                               for include_dir in include_dirs                                ],
             *[f"-D{key}={value}"                                               for key, value  in (self.define_macros | define_macros).items()],
+            *([f"-fdiagnostics-add-output=sarif:file={diagnose_file}"] if diagnose_file is not None else []),
+            *([f"-fopt-info-optimized={optimize_file}"]                if optimize_file is not None else []),
             "-c", file,
             "-o", object_file
         ],
-        log_command=(True, file),
-        log_stderr =True
+        log_command=(True, file)
     )
 
 @member(Gcc)
 @syncable
-async def async_compile(self, file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}):
-    create_dir(parent_path(object_file))
-    await async_run(
-        command=[
-            self.path,
-            *(self.compile_flags + compile_flags),
-            *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs                                 ],
-            *[f"-I{include_dir}"                                               for include_dir in include_dirs                                ],
-            *[f"-D{key}={value}"                                               for key, value  in (self.define_macros | define_macros).items()],
-            "-c", file,
-            "-o", object_file
-        ],
-        log_command=(True, file),
-        log_stderr =True
-    )
-
-@member(Gcc)
-@syncable
-async def async_link(self, file, executable_file, link_files=[], link_flags=[]):
+async def async_compile(self, file, executable_file, module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None):
     create_dir(parent_path(executable_file))
+    create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
+    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
+            *(self.compile_flags + compile_flags),
+            *[f"-fmodule-mapper={module_mapper_logger.get_mapper(module_dir)}" for module_dir  in module_dirs                                 ],
+            *[f"-I{include_dir}"                                               for include_dir in include_dirs                                ],
+            *[f"-D{key}={value}"                                               for key, value  in (self.define_macros | define_macros).items()],
+            *([f"-fdiagnostics-add-output=sarif:file={diagnose_file}"] if diagnose_file is not None else []),
+            *([f"-fopt-info-optimized={optimize_file}"]                if optimize_file is not None else []),
+            file,
             *(self.link_flags + link_flags),
-            file, *link_files,
+            *link_files,
             "-o", executable_file
-        ]
+        ],
+        log_command=(True, file)
     )
 
 @member(Gcc)
 @syncable
+@once
 async def async_std_module(self):
     verbose_info = await async_run(
         command=[self.path, "-v", "-E", "-x", "c++", "-"], 

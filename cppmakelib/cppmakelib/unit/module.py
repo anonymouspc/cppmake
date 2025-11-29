@@ -36,6 +36,8 @@ async def __ainit__(self, name, file):
     self.file           = file
     self.module_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.module_suffix}"
     self.object_file    = f"binary/{config.type}/module/{self.name.replace(':', '-')}{compiler.object_suffix}"
+    self.diagnose_file  = f"binary/cache/module.{self.name.replace(':', '.')}.sarif"
+    self.optimize_file  = f"binary/cache/module.{self.name.replace(':', '.')}.optim"
     self.import_package = await Package.__anew__(Package, "main" if self.file.startswith("module/") else self.name.split(':')[0].split('.')[0])
     self.import_modules = await when_all([Module.__anew__(Module, import_) for import_ in await unit_preprocess_logger.async_get_imports(unit=self)])
     self.compile_flags  = self.import_package.compile_flags
@@ -59,7 +61,9 @@ async def async_precompile(self):
                 module_dirs  =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file)),
                 include_dirs =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir),
                 compile_flags=self.compile_flags,
-                define_macros=self.define_macros
+                define_macros=self.define_macros,
+                diagnose_file=self.diagnose_file,
+                optimize_file=self.optimize_file
             )
             module_status_logger.log_status(module=self)
 

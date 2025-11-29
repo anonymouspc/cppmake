@@ -4,27 +4,25 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.execution.run      import async_run
 from cppmakelib.file.file_system   import parent_path, exist_file, create_dir
-from cppmakelib.system.all         import system
 from cppmakelib.utility.decorator  import member, once, syncable
 from cppmakelib.utility.sarif      import make_sarif
 from cppmakelib.utility.version    import parse_version
+import re
 
 class Clang(Gcc):
     name          = "clang"
     module_suffix = ".pcm"
     object_suffix = ".o"
-    def           __init__    (self, path="clang++"):                                                                                      ...
-    async def     __ainit__   (self, path="clang++"):                                                                                      ...
-    def             preprocess(self, code,                                                            compile_flags=[], define_macros={}): ...
-    async def async_preprocess(self, code,                                                            compile_flags=[], define_macros={}): ...
-    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    def             compile   (self, file,              object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    async def async_compile   (self, file,              object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}): ...
-    def             link      (self, file, executable_file,                          link_files  =[], link_flags   =[]                  ): ...
-    async def async_link      (self, file, executable_file,                          link_files  =[], link_flags   =[]                  ): ...
-    def             std_module(self):                                                                                                      ...
-    async def async_std_module(self):                                                                                                      ...
+    def           __init__    (self, path="clang++"):                                                                                                                                                            ...
+    async def     __ainit__   (self, path="clang++"):                                                                                                                                                            ...
+    def             preprocess(self, file,                                                                           compile_flags=[],                define_macros={}):                                         ...
+    async def async_preprocess(self, file,                                                                           compile_flags=[],                define_macros={}):                                         ...
+    def             precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[],                define_macros={}, diagnose_file=None, optimize_file=None): ...
+    async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[],                compile_flags=[],                define_macros={}, diagnose_file=None, optimize_file=None): ...
+    def             compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None): ...
+    async def async_compile   (self, file, executable_file,          module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None): ...
+    def             std_module(self):                                                                                                                                                                            ...
+    async def async_std_module(self):                                                                                                                                                                            ...
 
 
 
@@ -55,7 +53,9 @@ async def __ainit__(self, path="clang++"):
 
 @member(Clang)
 @syncable
-async def async_preprocess(self, code, compile_flags=[], define_macros={}):
+async def async_preprocess(self, file, compile_flags=[], define_macros={}):
+    code = open(file, 'r').read()
+    code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
     return await async_run(
         command=[
             self.path,
@@ -71,9 +71,11 @@ async def async_preprocess(self, code, compile_flags=[], define_macros={}):
 
 @member(Clang)
 @syncable
-async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}):
+async def async_precompile(self, file, module_file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}, diagnose_file=None, optimize_file=None):
     create_dir(parent_path(module_file))
     create_dir(parent_path(object_file))
+    create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
+    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
@@ -85,7 +87,7 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
             "-o",                               module_file
         ],
         log_command=(True, file),
-        log_stderr =(True, make_sarif)
+        log_stderr =(True, lambda code, stderr: open(diagnose_file, 'w').write(make_sarif(stderr)) if code != 0 and diagnose_file is not None else None)
     )
     await async_run(
         command=[
@@ -98,8 +100,10 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
 
 @member(Clang)
 @syncable
-async def async_compile(self, file, object_file, module_dirs=[], include_dirs=[], compile_flags=[], define_macros={}):
-    create_dir(parent_path(object_file))
+async def async_compile(self, file, executable_file, module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None):
+    create_dir(parent_path(executable_file))
+    create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
+    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
@@ -107,24 +111,15 @@ async def async_compile(self, file, object_file, module_dirs=[], include_dirs=[]
             *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs                                 ],
             *[f"-I{include_dir}"                     for include_dir in include_dirs                                ],
             *[f"-D{key}={value}"                     for key, value  in (self.define_macros | define_macros).items()],
-            "-c", file,
-            "-o", object_file
+            *(["-Rpass"] if optimize_file is not None else []),
+            file,
+            *(self.link_flags + link_flags),
+            *link_files,
+            "-o", executable_file,
         ],
         log_command=(True, file),
-        log_stderr =(True, make_sarif)
-    )
-
-@member(Clang)
-@syncable
-async def async_link(self, file, executable_file, link_files=[], link_flags=[]):
-    create_dir(parent_path(executable_file))
-    await async_run(
-        command=[
-            self.path,
-            *(self.link_flags + link_flags),
-            file, *link_files,
-            "-o", executable_file
-        ]
+        log_stderr =(True, lambda code, stderr: open(optimize_file, 'w').write           (stderr)  if code == 0 and optimize_file is not None else \
+                                                open(diagnose_file, 'w').write(make_sarif(stderr)) if code != 0 and diagnose_file is not None else None)
     )
 
 @member(Clang)
