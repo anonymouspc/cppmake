@@ -84,7 +84,7 @@ async def async_run(
                     pass
                 raise TimeoutError(f"process {' '.join(command)} timeouts after {timeout} seconds")
             if log_stderr[0] == True:
-                log_stderr[1](code, stderr) 
+                log_stderr[1](stderr) 
             if code == 0:
                 return (stdout, stderr) if return_stdout and return_stderr else \
                         stdout          if return_stdout                   else \
