@@ -75,7 +75,6 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
     create_dir(parent_path(module_file))
     create_dir(parent_path(object_file))
     create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
-    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
@@ -87,7 +86,7 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
             "-o",                               module_file
         ],
         log_command=(True, file),
-        log_stderr =(True, lambda code, stderr: open(diagnose_file, 'w').write(make_sarif(stderr)) if code != 0 and diagnose_file is not None else None)
+        log_stderr =(True, lambda stderr: open(diagnose_file, 'w').write(make_sarif(stderr)) if diagnose_file is not None else None)
     )
     await async_run(
         command=[
@@ -103,7 +102,6 @@ async def async_precompile(self, file, module_file, object_file, module_dirs=[],
 async def async_compile(self, file, executable_file, module_dirs=[], include_dirs=[], link_files=[], compile_flags=[], link_flags=[], define_macros={}, diagnose_file=None, optimize_file=None):
     create_dir(parent_path(executable_file))
     create_dir(parent_path(diagnose_file)) if diagnose_file is not None else None
-    create_dir(parent_path(optimize_file)) if optimize_file is not None else None
     await async_run(
         command=[
             self.path,
@@ -111,15 +109,13 @@ async def async_compile(self, file, executable_file, module_dirs=[], include_dir
             *[f"-fprebuilt-module-path={module_dir}" for module_dir  in module_dirs                                 ],
             *[f"-I{include_dir}"                     for include_dir in include_dirs                                ],
             *[f"-D{key}={value}"                     for key, value  in (self.define_macros | define_macros).items()],
-            *(["-Rpass"] if optimize_file is not None else []),
             file,
             *(self.link_flags + link_flags),
             *link_files,
             "-o", executable_file,
         ],
         log_command=(True, file),
-        log_stderr =(True, lambda code, stderr: open(optimize_file, 'w').write           (stderr)  if code == 0 and optimize_file is not None else \
-                                                open(diagnose_file, 'w').write(make_sarif(stderr)) if code != 0 and diagnose_file is not None else None)
+        log_stderr =(True, lambda stderr: open(diagnose_file, 'w').write(make_sarif(stderr)) if diagnose_file is not None else None)
     )
 
 @member(Clang)
