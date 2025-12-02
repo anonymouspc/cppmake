@@ -9,6 +9,10 @@ Cppmake aims to
 
 Cppmake is written in pure Python with no additional pip dependencies.
 
+# Show
+
+![vedio](share/make.gif)
+
 # Install
 
 Use pip to install cppmake:
