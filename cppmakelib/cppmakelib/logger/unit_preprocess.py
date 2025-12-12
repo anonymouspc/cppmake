@@ -106,15 +106,13 @@ async def _async_update_content(self, type, file, name=None):
 def _check_cycle(self, type, name, history=[]):
     assert type == "module"
     if name in history:
-        raise LogicError(f"module import cycle (with cycle = {'->'.join(history + [name])})")
+        raise LogicError(f"module import cycle (with cycle = {' -> '.join(history + [name])})")
     pkghist = [histname.split(':')[0].split('.')[0] for histname in history]
     pkgname = name.split(':')[0].split('.')[0]
     if pkgname in pkghist and pkgname != pkghist[-1]:
-        raise LogicError(f"package import cycle (with module-cycle = {'->'.join(history + [name])}, package-cycle = {'->'.join(pkghist + [pkgname])})")
+        raise LogicError(f"package import cycle (with module-cycle = {' -> '.join(history + [name])}, package-cycle = {'->'.join(pkghist + [pkgname])})")
     for subname in self._content["file"][self._content["unit"]["module"][name]["unit.file"]]["unit.imports"]:
         if (type, subname) in self._updated:
             self._check_cycle(type=type, name=subname, history=history + [name])
         
-    
-
 unit_preprocess_logger = UnitPreprocessLogger()

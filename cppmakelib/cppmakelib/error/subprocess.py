@@ -4,8 +4,8 @@ import sys
 
 class SubprocessError(Exception):
     def __init__     (self, stderr, is_stderr_printed, code): ...
-    def __str__      (self):                                  ...
     def __terminate__():                                      ...
+    def __str__      (self):                                  ...
 
 
 
@@ -18,13 +18,14 @@ def __init__(self, stderr, is_stderr_printed, code):
     on_terminate(SubprocessError.__terminate__)
 
 @member(SubprocessError)
-def __str__(self):
-    return self.stderr
-
-@member(SubprocessError)
 def __terminate__():
     try:
         rethrow_exception(current_exception())
     except SubprocessError as error:
         if not error.is_stderr_printed:
             print(error.stderr, file=sys.stderr)
+
+
+@member(SubprocessError)
+def __str__(self):
+    return self.stderr
