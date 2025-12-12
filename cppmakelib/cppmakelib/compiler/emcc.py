@@ -27,8 +27,8 @@ async def __ainit__(self, path="em++"):
     self.stdlib  = "libc++"
     self.compile_flags = [
        f"-std={config.std}",
-        "-fdiagnostics-color=always", "-fexceptions",
-        "-Wall",
+        "-fexceptions", "-fwrapv",
+        "-fdiagnostics-color=always", "-Wall",
         *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
           ["-O3",                    ] if config.type == "release" else
           ["-Os"                     ] if config.type == "size"    else 

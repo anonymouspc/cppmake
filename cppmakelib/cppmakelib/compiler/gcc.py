@@ -34,6 +34,7 @@ async def __ainit__(self, path="g++"):
     self.stdlib  = "libstdc++"
     self.compile_flags = [
         f"-std={config.std}", "-fmodules", 
+         "-fwrapv",
          "-fdiagnostics-color=always",
          "-Wall",
          *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
@@ -56,7 +57,7 @@ async def __ainit__(self, path="g++"):
 @syncable
 async def async_preprocess(self, file, compile_flags=[], define_macros={}):
     code = open(file, 'r').read()
-    code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
+    code = re.sub(r'^\s*#include(?!\s*<version>).*$', "", code, flags=re.MULTILINE)
     return await async_run(
         command=[
             self.path,
