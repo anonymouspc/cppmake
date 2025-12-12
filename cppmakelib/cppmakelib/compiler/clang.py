@@ -34,8 +34,8 @@ async def __ainit__(self, path="clang++"):
     self.stdlib  = await self._async_get_stdlib()
     self.compile_flags = [
        f"-std={config.std}",
-        "-fdiagnostics-color=always",
-        "-Wall", "-Wno-import-implementation-partition-unit-in-interface-unit",
+        "-fwrapv",
+        "-fdiagnostics-color=always", "-Wall", "-Wno-import-implementation-partition-unit-in-interface-unit",
         *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
           ["-O3",                    ] if config.type == "release" else
           ["-Os"                     ] if config.type == "size"    else 
@@ -55,7 +55,7 @@ async def __ainit__(self, path="clang++"):
 @syncable
 async def async_preprocess(self, file, compile_flags=[], define_macros={}):
     code = open(file, 'r').read()
-    code = re.sub(r'^\s*#include(?!\s*(<version>|<unistd.h>)).*$', "", code, flags=re.MULTILINE)
+    code = re.sub(r'^\s*#include(?!\s*<version>).*$', "", code, flags=re.MULTILINE)
     return await async_run(
         command=[
             self.path,
