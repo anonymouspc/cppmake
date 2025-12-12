@@ -124,7 +124,10 @@ def trace(func):
             try:
                 return func(self, *args, **kwargs)
             except Exception as error:
-                raise type(error)(f"In {type(self).__qualname__.lower()} {self.name}:\n{error.args[0]}", *error.args[1:])
+                if hasattr(error, "add_prefix"):
+                     raise error.add_prefix(f"In {type(self).__qualname__.lower()} {self.name}:")
+                else:
+                     raise error
         return trace_func
     else:
         @functools.wraps(func)
@@ -132,8 +135,10 @@ def trace(func):
             try:
                 return await func(self, *args, **kwargs)
             except Exception as error:
-                raise type(error)(f"In {type(self).__qualname__.lower()} {self.name}:\n{error.args[0]}", *error.args[1:])
-
+                if hasattr(error, "add_prefix"):
+                     raise error.add_prefix(f"In {type(self).__qualname__.lower()} {self.name}:")
+                else:
+                     raise error
     return trace_func
     
 def unique(func):

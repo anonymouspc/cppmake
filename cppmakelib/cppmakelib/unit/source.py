@@ -55,6 +55,7 @@ async def async_compile(self):
             print(f"compile source: {self.name}")
             await compiler.async_compile(
                 self.file,
+                object_file    =self.object_file,
                 executable_file=self.executable_file,
                 module_dirs    =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: parent_path(module.module_file),                                                                                 root=False),
                 include_dirs   =recursive_collect(self, next=lambda module: module.import_modules, collect=lambda module: module.import_package.include_dir if exist_dir(module.import_package.include_dir) else None,                     root=False),
