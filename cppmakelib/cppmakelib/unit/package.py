@@ -37,7 +37,6 @@ async def __ainit__(self, name, dir):
     self.install_dir     = f"binary/package/{self.name}/install"
     self.include_dir     = f"binary/package/{self.name}/install/include"
     self.lib_dir         = f"binary/package/{self.name}/install/lib"
-    self.export_modules  = ...
     self.import_packages = ...
     self.compile_flags   = []
     self.link_flags      = []
@@ -64,8 +63,7 @@ async def async_build(self):
 @trace
 async def async_is_built(self):
     from cppmakelib.unit.module import Module
-    self.export_modules  = await when_all([Module.__anew__(Module, file=file) for file in iterate_dir(self.module_dir, recursive=True)])                                                                  if self.name != "main" else []
-    self.import_packages = recursive_collect(self.export_modules, next=lambda module: module.import_modules, collect=lambda module: module.import_package if module.import_package is not self else None) if self.name != "main" else []
+    self.import_packages = recursive_collect(await Module.__anew__(Module, name=self.name), next=lambda module: module.import_modules, collect=lambda module: module.import_package if module.import_package is not self else None) if self.name != "main" else []
     return all(await when_all([package.async_is_built() for package in self.import_packages])) and \
            await package_status_logger.async_get_status(package=self)
 

@@ -2,9 +2,9 @@ from cppmakelib import *
 
 def main():
     if not exist_dir("package/std"): # install std as default
-        create_dir("package/std/module")
-        open      ("package/std/module/std.cpp", 'w').write(default_std_module)
-        open      ("package/std/cppmake.py",     'w').write(default_std_cppmake)
+        create_dir  ("package/std/module")
+        open        ("package/std/module/std.cpp", 'w').write(default_std_module)
+        open        ("package/std/cppmake.py",     'w').write(default_std_cppmake)
     Package("std").build()
 
     if Package("main").cppmake is not None:

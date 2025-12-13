@@ -34,11 +34,9 @@ async def __ainit__(self, path="clang++"):
     self.stdlib  = await self._async_get_stdlib()
     self.compile_flags = [
        f"-std={config.std}",
-        "-fwrapv",
-        "-fdiagnostics-color=always", "-Wall", "-Wno-import-implementation-partition-unit-in-interface-unit",
-        *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
-          ["-O3",                    ] if config.type == "release" else
-          ["-Os"                     ] if config.type == "size"    else 
+        *(["-O0", "-g"] if config.type == "debug"   else
+          ["-O3",     ] if config.type == "release" else
+          ["-Os"      ] if config.type == "size"    else 
           [])
     ]
     self.link_flags = [

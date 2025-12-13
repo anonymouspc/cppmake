@@ -40,7 +40,7 @@ def __init__(self):
 
 @member(UnitPreprocessLogger)
 def __exit__(self):
-    if len(self._content) > 0:
+    if len(self._content["file"]) > 0:
         create_dir(f"binary/cache")
         json.dump(self._content, open(f"binary/cache/log.unit_preprocess.json", 'w'), indent=4)
 

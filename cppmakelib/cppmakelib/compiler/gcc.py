@@ -34,12 +34,9 @@ async def __ainit__(self, path="g++"):
     self.stdlib  = "libstdc++"
     self.compile_flags = [
         f"-std={config.std}", "-fmodules", 
-         "-fwrapv",
-         "-fdiagnostics-color=always",
-         "-Wall",
-         *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
-           ["-O3",                    ] if config.type == "release" else
-           ["-Os"                     ] if config.type == "size"    else 
+         *(["-O0", "-g"] if config.type == "debug"   else
+           ["-O3",     ] if config.type == "release" else
+           ["-Os"      ] if config.type == "size"    else 
            []) 
     ]
     self.link_flags = [
