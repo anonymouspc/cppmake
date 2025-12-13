@@ -26,12 +26,10 @@ async def __ainit__(self, path="em++"):
     self.version = await self._async_get_version()
     self.stdlib  = "libc++"
     self.compile_flags = [
-       f"-std={config.std}",
-        "-fexceptions", "-fwrapv",
-        "-fdiagnostics-color=always", "-Wall",
-        *(["-O0", "-g", "-fno-inline"] if config.type == "debug"   else
-          ["-O3",                    ] if config.type == "release" else
-          ["-Os"                     ] if config.type == "size"    else 
+       f"-std={config.std}", "-fexceptions",
+        *(["-O0", "-g"] if config.type == "debug"   else
+          ["-O3",     ] if config.type == "release" else
+          ["-Os"      ] if config.type == "size"    else 
           [])
     ]
     self.link_flags = [

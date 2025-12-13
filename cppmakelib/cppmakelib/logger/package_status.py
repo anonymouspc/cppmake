@@ -53,7 +53,7 @@ async def async_log_status(self, package):
 @member(PackageStatusLogger)
 @syncable
 async def async_get_status(self, package):
-    return package.name in self._content.keys()                                                                                                                                                     and \
+    return package.name in self._content.keys()                                                                                                                                                      and \
            compiler.name                                                                  == self._content[package.name]["compiler.name"           ]                                                 and \
            compiler.path                                                                  == self._content[package.name]["compiler.path"           ]                                                 and \
            compiler.version.__str__()                                                     == self._content[package.name]["compiler.version"        ]                                                 and \
