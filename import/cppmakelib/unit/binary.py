@@ -1,3 +1,8 @@
+from cppmakelib.unit.package       import Package
+from cppmakelib.utility.decorator  import member
+from cppmakelib.utility.filesystem import modified_time_file, path
+from cppmakelib.utility.time       import time
+
 class Binary:
     def           __init__ (self, file       : path) -> None  : ...
     def             install(self, install_dir: path) -> Binary: ...
@@ -12,11 +17,6 @@ class Binary:
     link_flags     : list[str]
 
 
-
-from cppmakelib.unit.package       import Package
-from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import modified_time_file, path
-from cppmakelib.utility.time       import time
 
 @member(Binary)
 def __init__(self: Binary, file: path) -> None:

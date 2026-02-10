@@ -1,3 +1,5 @@
+from cppmakelib.unit.package      import Package, main_package
+from cppmakelib.utility.decorator import member
 import typing
 
 class Context:
@@ -16,9 +18,6 @@ class Context:
 context: Context
 
 
-
-from cppmakelib.unit.package      import Package
-from cppmakelib.utility.decorator import member
 
 @member(Context)
 def __init__(self: Context, package: Package) -> None:
@@ -42,4 +41,4 @@ def __enter__(self: Context._ContextManager) -> None:
 def __exit__(self: Context._ContextManager, *args: typing.Any, **kwargs: typing.Any) -> None:
     self._context.package = self._old_package
 
-context = Context(Package('main'))
+context = Context(main_package)

@@ -1,4 +1,6 @@
+from cppmakelib.utility.decorator import member
 import functools
+import re
 
 @functools.total_ordering
 class Version:
@@ -15,9 +17,6 @@ class Version:
     subversions: list[int]
 
 
-
-from cppmakelib.utility.decorator import member
-import re
 
 @member(Version)
 def __init__(self: Version, subversions: list[int]) -> None:

@@ -1,3 +1,13 @@
+from cppmakelib.basic.config       import config
+from cppmakelib.compiler.all       import compiler
+from cppmakelib.executor.scheduler import scheduler
+from cppmakelib.unit.package       import Package
+from cppmakelib.unit.preprocessed  import Preprocessed
+from cppmakelib.utility.algorithm  import recursive_collect
+from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
+from cppmakelib.utility.filesystem import modified_time_file, path, relative_path, replace_suffix_file
+from cppmakelib.utility.time       import time
+
 class Code:
     def           __new__          (cls: ..., file: path) -> Code        : ...
     async def    __anew__          (cls: ..., file: path) -> Code        : ...
@@ -15,16 +25,6 @@ class Code:
     define_macros    : dict[str, str]
 
 
-
-from cppmakelib.basic.config       import config
-from cppmakelib.compiler.all       import compiler
-from cppmakelib.executor.scheduler import scheduler
-from cppmakelib.unit.package       import Package
-from cppmakelib.unit.preprocessed  import Preprocessed
-from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import modified_time_file, path, relative_path, replace_suffix_file
-from cppmakelib.utility.time       import time
 
 @member(Code)
 @syncable

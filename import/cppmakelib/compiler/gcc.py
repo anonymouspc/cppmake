@@ -1,18 +1,27 @@
+from cppmakelib.basic.config       import config
+from cppmakelib.error.config       import ConfigError
+from cppmakelib.error.subprocess   import SubprocessError
+from cppmakelib.executor.run       import async_run
+from cppmakelib.utility.decorator  import member, syncable
+from cppmakelib.utility.filesystem import create_dir, exist_file, iterate_dir, parent_dir, path
+from cppmakelib.utility.version    import Version
+import re
+
 class Gcc:
-    def           __init__    (self, file: path = 'g++')                                                                                                                                                                                                                 -> None: ...
-    async def    __ainit__    (self, file: path = 'g++')                                                                                                                                                                                                                 -> None: ...
-    def             preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                    -> None: ...
-    async def async_preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                    -> None: ...
-    def             preparse  (self, header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                               diagnostic_file: path | None = None) -> None: ...
-    async def async_preparse  (self, header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                               diagnostic_file: path | None = None) -> None: ...
-    def             precompile(self, module_file: path, precompiled_file : path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [], import_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
-    async def async_precompile(self, module_file: path, precompiled_file : path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [], import_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
-    def             compile   (self, source_file: path, object_file      : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [], import_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
-    async def async_compile   (self, source_file: path, object_file      : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [], import_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
-    def             share     (self, object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                    -> None: ...
-    async def async_share     (self, object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                    -> None: ...
-    def             link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                    -> None: ...
-    async def async_link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                    -> None: ...
+    def           __init__    (self, file: path = 'g++')                                                                                                                                                                                                                  -> None: ...
+    async def    __ainit__    (self, file: path = 'g++')                                                                                                                                                                                                                  -> None: ...
+    def             preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                     -> None: ...
+    async def async_preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                     -> None: ...
+    def             preparse  (self, header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                                diagnostic_file: path | None = None) -> None: ...
+    async def async_preparse  (self, header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                                diagnostic_file: path | None = None) -> None: ...
+    def             precompile(self, module_file: path, precompiled_file : path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
+    async def async_precompile(self, module_file: path, precompiled_file : path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
+    def             compile   (self, source_file: path, object_file      : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
+    async def async_compile   (self, source_file: path, object_file      : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
+    def             share     (self, object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
+    async def async_share     (self, object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
+    def             link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
+    async def async_link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
     preprocessed_suffix: str = '.ipp'
     preparsed_suffix   : str = '.gch'
     precompiled_suffix : str = '.gcm'  
@@ -27,20 +36,11 @@ class Gcc:
     stdlib_static_file : path
     stdlib_dynamic_file: path
 
-    async def _async_get_version           (self)                                             -> Version: ...
-    async def _async_get_stdlib_module_file(self)                                             -> path   : ...
-    def       _write_mapper                (self, target_file: path, import_dirs: list[path]) -> path   : ...
+    async def _async_get_version           (self)                                                                                 -> Version: ...
+    async def _async_get_stdlib_module_file(self)                                                                                 -> path   : ...
+    def       _write_mapper                (self, target_file: path, import_files: list[path] = [], import_dirs: list[path] = []) -> path   : ...
 
 
-
-from cppmakelib.basic.config         import config
-from cppmakelib.error.config         import ConfigError
-from cppmakelib.error.subprocess     import SubprocessError
-from cppmakelib.executor.run         import async_run
-from cppmakelib.utility.decorator    import member, syncable
-from cppmakelib.utility.filesystem   import create_dir, exist_file, iterate_dir, parent_dir, path
-from cppmakelib.utility.version      import Version
-import re
 
 @member(Gcc)
 @syncable
@@ -69,19 +69,20 @@ async def __ainit__(self: Gcc, file: path = 'g++') -> None:
 @syncable
 async def async_preprocess(
     self             : Gcc, 
-    unit_file        : path, 
+    code_file        : path, 
     preprocessed_file: path, 
     compile_flags    : list[str]      = [], 
     define_macros    : dict[str, str] = {}, 
     include_dirs     : list[path]     = []
 ) -> None:
+    create_dir(parent_dir(preprocessed_file))
     await async_run(
         file=self.file,
         args=[
             *(self.compile_flags + compile_flags),
             *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
             *[f'-I{include_dir}' for include_dir in include_dirs],
-            '-E', unit_file,
+            '-E', code_file,
             '-o', preprocessed_file
         ],
         print_stdout=False,
@@ -123,8 +124,8 @@ async def async_precompile(
     object_file     : path, 
     compile_flags   : list[str]      = [], 
     define_macros   : dict[str, str] = {}, 
-    include_dirs    : list[path]     = [], 
     import_dirs     : list[path]     = [], 
+    include_dirs    : list[path]     = [], 
     diagnostic_file : path | None    = None
 ) -> None:
     create_dir(parent_dir(precompiled_file))
@@ -135,10 +136,10 @@ async def async_precompile(
         args=[
             *(self.compile_flags + compile_flags),
             *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
+            f'-fmodule-mapper={self._write_mapper(target_file=precompiled_file, import_files=[precompiled_file],  import_dirs=import_dirs)}',
             *[f'-I{include_dir}' for include_dir in include_dirs],
-            f'-fmodule-mapper={self._write_mapper(target_file=precompiled_file, import_dirs=import_dirs)}',
             *([f'-fdiagnostics-add-output=sarif:file={diagnostic_file}'] if diagnostic_file is not None else []),
-            '-c', '-x', 'c++-module', module_file,
+            '-c', '-x', 'c++', module_file,
             '-o', object_file
         ],
         log_command=module_file
@@ -152,8 +153,8 @@ async def async_compile(
     object_file    : path,
     compile_flags  : list[str]      = [],
     define_macros  : dict[str, str] = {}, 
-    include_dirs   : list[path]     = [], 
     import_dirs    : list[path]     = [], 
+    include_dirs   : list[path]     = [], 
     diagnostic_file: path | None = None
 ) -> None:
     create_dir(parent_dir(object_file))
@@ -163,8 +164,8 @@ async def async_compile(
         args=[
             *(self.compile_flags + compile_flags),
             *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
-            *[f'-I{include_dir}' for include_dir in include_dirs],
             f'-fmodule-mapper={self._write_mapper(target_file=object_file, import_dirs=import_dirs)}',
+            *[f'-I{include_dir}' for include_dir in include_dirs],
             *([f'-fdiagnostics-add-output=sarif:file={diagnostic_file}'] if diagnostic_file is not None else []),
             '-c', '-x', 'c++', source_file,
             '-o', object_file
@@ -238,13 +239,12 @@ async def _async_get_stdlib_module_file(self: Gcc) -> path:
         raise ConfigError(f'libstdc++ module_file is not found (with search_files = {search_files})')
 
 @member(Gcc)
-def _write_mapper(self: Gcc, target_file: path, import_dirs: list[path]) -> path:
+def _write_mapper(self: Gcc, target_file: path, import_files: list[path] = [], import_dirs: list[path] = []) -> path:
     mapper_file = f'{target_file.rpartition('.')[0]}.mapper'
     writer = open(mapper_file, 'w')
-    for import_dir in import_dirs:
-        for file in iterate_dir(import_dir):
-            name = file.split('/')[-1].removesuffix(self.precompiled_suffix).replace('-', ':') # TODO: get rid of split('/').
-            writer.write(f'{name} {file}\n')
+    for file in import_files + [import_file for import_dir in import_dirs for import_file in iterate_dir(import_dir) if import_file.endswith(Gcc.precompiled_suffix)]:
+        name = file.split('/')[-1].removesuffix(self.precompiled_suffix).replace('-', ':') # TODO: get rid of split('/').
+        writer.write(f'{name} {file}\n')
     writer.close()
     return mapper_file
     

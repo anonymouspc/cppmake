@@ -1,4 +1,11 @@
-from cppmakelib.compiler.clang import Clang
+from cppmakelib.basic.config       import config
+from cppmakelib.compiler.clang     import Clang
+from cppmakelib.error.config       import ConfigError
+from cppmakelib.error.subprocess   import SubprocessError
+from cppmakelib.executor.run       import async_run
+from cppmakelib.utility.decorator  import member, syncable
+from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.version    import Version
 
 class Emcc(Clang):
     def        __init__(self, file: path = 'em++') -> None: ...
@@ -18,13 +25,7 @@ class Emcc(Clang):
 
 
 
-from cppmakelib.basic.config       import config
-from cppmakelib.error.config       import ConfigError
-from cppmakelib.error.subprocess   import SubprocessError
-from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import path
-from cppmakelib.utility.version    import Version
+
 
 @member(Emcc)
 @syncable

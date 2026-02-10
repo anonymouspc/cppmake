@@ -1,4 +1,13 @@
-from cppmakelib.unit.code import Code
+from cppmakelib.compiler.all       import compiler
+from cppmakelib.executor.operation import when_all
+from cppmakelib.executor.scheduler import scheduler
+from cppmakelib.system.all         import system
+from cppmakelib.unit.code          import Code
+from cppmakelib.unit.module        import Module
+from cppmakelib.unit.object        import Object
+from cppmakelib.utility.algorithm  import recursive_collect
+from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
+from cppmakelib.utility.filesystem import path, relative_path, replace_suffix_file
 
 class Source(Code):
     def           __new__      (cls: ..., file: path) -> Source: ...
@@ -14,16 +23,6 @@ class Source(Code):
     import_modules : list[Module]
 
 
-
-from cppmakelib.compiler.all       import compiler
-from cppmakelib.executor.operation import when_all
-from cppmakelib.executor.scheduler import scheduler
-from cppmakelib.system.all         import system
-from cppmakelib.unit.module        import Module
-from cppmakelib.unit.object        import Object
-from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import path, relative_path, replace_suffix_file
 
 @member(Source)
 @syncable
@@ -49,12 +48,12 @@ async def async_compile(self: Source) -> Object:
                 object_file    =self.object_file,
                 compile_flags  =self.compile_flags,
                 define_macros  =self.define_macros,
-                include_dirs   =[self.context_package.build_include_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
                 import_dirs    =[self.context_package.build_import_dir]  + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_import_dir),                    
+                include_dirs   =[self.context_package.build_include_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
                 diagnostic_file=self.diagnostic_file,
             )
         self.context_package.unit_status_logger.set_source_compiled(source=self, compiled=True)
-    return Object(self.object_file)
+    return Object(self.object_file, self)
 
 @member(Source)
 @syncable

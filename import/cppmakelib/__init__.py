@@ -23,7 +23,7 @@ from cppmakelib.system.windows      import Windows
 from cppmakelib.unit.executable     import Executable
 from cppmakelib.unit.header         import Header
 from cppmakelib.unit.module         import Module
-from cppmakelib.unit.package        import Package
+from cppmakelib.unit.package        import Package, MainPackage, main_package
 from cppmakelib.unit.source         import Source
 
-self: Package
+self: Package = main_package

@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name"   : "cppmake",
+            "type"   : "debugpy",
+            "request": "launch",
+            "cwd"    : "/home/shyeyian/Code/cpp",
+            "python" : "/home/shyeyian/Environment/python/bin/python",
+            "code"   : "from cppmakelib import *; Source('bin/main.cpp').is_compiled()",
+        }
+    ]
+}

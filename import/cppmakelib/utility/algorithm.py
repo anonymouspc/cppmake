@@ -16,7 +16,7 @@ def recursive_collect[T, U, R](
     collect: typing.Callable[[T], R | list[R] | None], 
     flatten: bool = False
 ) -> list[R]:
-   return _recursive_collect_impl(node, next, collect, flatten, True, set(), list())
+   return _recursive_collect_impl(node=node, next=next, collect=collect, flatten=flatten, root=True, visited=set(), collected=list())
 
 def _recursive_collect_impl[T, U, R](
     node     : U | T, 
@@ -37,5 +37,5 @@ def _recursive_collect_impl[T, U, R](
                 else:
                     collected += typing.cast(list[R], value)
         for subnode in next(node):
-            _recursive_collect_impl(subnode, next, collect, flatten, True, visited, collected)
+            _recursive_collect_impl(node=subnode, next=next, collect=collect, flatten=flatten, root=False, visited=visited, collected=collected)
     return collected

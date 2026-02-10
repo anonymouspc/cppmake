@@ -1,4 +1,8 @@
+from cppmakelib.system.all         import system
+from cppmakelib.utility.decorator  import member
+from cppmakelib.utility.filesystem import path
 import argparse
+import os
 import typing
 
 class Config(argparse.Namespace):
@@ -17,11 +21,6 @@ class Config(argparse.Namespace):
 config: Config
 
 
-
-from cppmakelib.system.all         import system
-from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
-import os
 
 @member(Config)
 def __init__(self: Config) -> None:

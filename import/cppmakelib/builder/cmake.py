@@ -1,3 +1,12 @@
+from cppmakelib.basic.config       import config
+from cppmakelib.compiler.all       import compiler
+from cppmakelib.error.config       import ConfigError
+from cppmakelib.error.subprocess   import SubprocessError
+from cppmakelib.executor.run       import async_run
+from cppmakelib.utility.decorator  import member, syncable
+from cppmakelib.utility.filesystem import create_dir, path, remove_dir
+from cppmakelib.utility.version    import Version
+
 class Cmake: 
     def           __init__(self, file: path = 'cmake')                                                                                   -> None: ...
     async def    __ainit__(self, file: path = 'cmake')                                                                                   -> None: ...
@@ -12,15 +21,6 @@ class Cmake:
 cmake: Cmake
 
 
-
-from cppmakelib.basic.config       import config
-from cppmakelib.compiler.all       import compiler
-from cppmakelib.error.config       import ConfigError
-from cppmakelib.error.subprocess   import SubprocessError
-from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import create_dir, path, remove_dir
-from cppmakelib.utility.version    import Version
 
 @member(Cmake)
 @syncable

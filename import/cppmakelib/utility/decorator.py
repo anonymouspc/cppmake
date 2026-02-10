@@ -1,23 +1,26 @@
-import typing
-
-def member     [S, **Ts, R](cls: type)                                                                                        -> typing.Callable[[typing.Callable[typing.Concatenate[S, Ts], R]], typing.Callable[typing.Concatenate[S, Ts], R]]: ...
-def once       [S,       R](func: typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]])                          -> typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]]                                              : ...
-@typing.overload
-def relocatable[S, **Ts, R](func: typing.Callable[typing.Concatenate[S, Ts], R])                                              -> typing.Callable[typing.Concatenate[S, Ts], R]: ...
-@typing.overload
-def relocatable[S, **Ts, R](func: typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, R]])    -> typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, R]]: ...
-def syncable   [   **Ts, R](func: typing.Callable[Ts, typing.Coroutine[typing.Any, typing.Any, R]])                           -> typing.Callable[Ts, typing.Coroutine[typing.Any, typing.Any, R]]                                               : ...
-@typing.overload
-def unique     [S, **Ts   ](func: typing.Callable[typing.Concatenate[S, Ts], None])                                           -> typing.Callable[typing.Concatenate[S, Ts], None]: ...
-@typing.overload
-def unique     [S, **Ts   ](func: typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, None]]) -> typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, None]]: ...
-
-
-
 from cppmakelib.executor.operation import sync_wait
 from cppmakelib.utility.filesystem import path
 import asyncio
 import inspect
+import typing
+
+def lifetime   [S, **Ts, R](*vars: typing.Any)                                                                                -> typing.Callable[[typing.Callable[typing.Concatenate[S, Ts], R]], typing.Callable[typing.Concatenate[S, Ts], R]]: ...
+def member     [S, **Ts, R](cls: type)                                                                                        -> typing.Callable[[typing.Callable[typing.Concatenate[S, Ts], R]], typing.Callable[typing.Concatenate[S, Ts], R]]: ...
+@typing.overload
+def once       [S,       R](func: typing.Callable[[S], R])                                                                    -> typing.Callable[[S], R]                                                                                        : ...
+@typing.overload
+def once       [S,       R](func: typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]])                          -> typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]]                                              : ...
+@typing.overload
+def relocatable[S, **Ts, R](func: typing.Callable[typing.Concatenate[S, Ts], R])                                              -> typing.Callable[typing.Concatenate[S, Ts], R]                                                                  : ...
+@typing.overload
+def relocatable[S, **Ts, R](func: typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, R]])    -> typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, R]]                        : ...
+def syncable   [   **Ts, R](func: typing.Callable[Ts, typing.Coroutine[typing.Any, typing.Any, R]])                           -> typing.Callable[Ts, typing.Coroutine[typing.Any, typing.Any, R]]                                               : ...
+@typing.overload
+def unique     [S, **Ts   ](func: typing.Callable[typing.Concatenate[S, Ts], None])                                           -> typing.Callable[typing.Concatenate[S, Ts], None]                                                               : ...
+@typing.overload
+def unique     [S, **Ts   ](func: typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, None]]) -> typing.Callable[typing.Concatenate[S, Ts], typing.Coroutine[typing.Any, typing.Any, None]]                     : ...
+
+
 
 # Every project has its own kind of shit mountain,
 # and the main difference lies in where those mountains are placed.
@@ -29,6 +32,16 @@ import inspect
 #
 # Here, in this project, we've gathered and neatly buried
 # all our shit in the file below. :)
+
+def lifetime[S, **Ts, R](*vars: typing.Any) -> typing.Callable[[typing.Callable[typing.Concatenate[S, Ts], R]], typing.Callable[typing.Concatenate[S, Ts], R]]:
+    def lifetimizer(func: typing.Callable[typing.Concatenate[S, Ts], R]) -> typing.Callable[typing.Concatenate[S, Ts], R]:
+        setattr(func, f'_lifetime', {var.__name__: var for var in vars})
+        def lifetime_func(self: S, *args: Ts.args, **kwargs: Ts.kwargs) -> R:
+            func.__globals__.update(getattr(func, '_lifetime'))
+            return func(self, *args, **kwargs)
+        lifetime_func.__name__ = func.__name__
+        return lifetime_func
+    return lifetimizer
 
 def member[S, **Ts, R](cls: type) -> typing.Callable[[typing.Callable[typing.Concatenate[S, Ts], R]], typing.Callable[typing.Concatenate[S, Ts], R]]:
     def memberizer(func: typing.Callable[typing.Concatenate[S, Ts], R]) -> typing.Callable[typing.Concatenate[S, Ts], R]:
@@ -44,14 +57,26 @@ def member[S, **Ts, R](cls: type) -> typing.Callable[[typing.Callable[typing.Con
             assert False
     return memberizer
 
-def once[S, R](func: typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]]) -> typing.Callable[[S], typing.Coroutine[typing.Any, typing.Any, R]]:
-    assert inspect.iscoroutinefunction(func)
-    async def once_func(self: S) -> R:
-        if not hasattr      (self, f'_once_{func.__name__}'):
-            setattr         (self, f'_once_{func.__name__}', asyncio.create_task(func(self)))
-        return await getattr(self, f'_once_{func.__name__}')
-    once_func.__name__ = func.__name__
-    return once_func
+def once[S, R](func: typing.Callable[[S], R | typing.Coroutine[typing.Any, typing.Any, R]]) -> typing.Callable[[S], R | typing.Coroutine[typing.Any, typing.Any, R]]:
+    if inspect.isfunction(func) and not inspect.iscoroutinefunction(func):
+        def once_func(self: S) -> R:
+            if not hasattr      (self, f'_once_{func.__name__}'):
+                setattr         (self, f'_once_{func.__name__}', False)
+            if not getattr      (self, f'_once_{func.__name__}'):
+                result = func(self)
+                setattr         (self, f'_once_{func.__name__}', True)
+                return result
+        once_func.__name__ = func.__name__
+        return once_func
+    elif inspect.iscoroutinefunction(func):
+        async def once_func(self: S) -> R:
+            if not hasattr      (self, f'_once_{func.__name__}'):
+                setattr         (self, f'_once_{func.__name__}', asyncio.create_task(func(self)))
+            return await getattr(self, f'_once_{func.__name__}')
+        once_func.__name__ = func.__name__
+        return once_func
+    else:
+        assert False
 
 def relocatable[S, **Ts, R](func: typing.Callable[typing.Concatenate[S, Ts], R | typing.Coroutine[typing.Any, typing.Any, R]]) -> typing.Callable[typing.Concatenate[S, Ts], R | typing.Coroutine[typing.Any, typing.Any, R]]:
     from cppmakelib.basic.context import context
@@ -89,7 +114,7 @@ def syncable[**Ts, R](func: typing.Callable[Ts, typing.Coroutine[typing.Any, typ
 def unique[S, **Ts](func: typing.Callable[typing.Concatenate[S, Ts], None | typing.Coroutine[typing.Any, typing.Any, None]]) -> typing.Callable[typing.Concatenate[S, Ts], None | typing.Coroutine[typing.Any, typing.Any, None]]:
     if inspect.isfunction(func) and not inspect.iscoroutinefunction(func):
         assert func.__name__ == '__init__'
-        def unique_func(cls: type, *args: Ts.args, **kwargs: Ts.kwargs) -> None:
+        def unique_func(cls: type, *args: Ts.args, **kwargs: Ts.kwargs) -> S:
             arg = _get_only_arg(args, kwargs)
             if not hasattr        (cls, f'_unique'):
                 setattr           (cls, f'_unique', {})
@@ -100,7 +125,7 @@ def unique[S, **Ts](func: typing.Callable[typing.Concatenate[S, Ts], None | typi
         return _MultiFunc(func, unique_func)
     elif inspect.iscoroutinefunction(func):
         assert func.__name__ == '__ainit__'
-        async def unique_func(cls: type, *args: Ts.args, **kwargs: Ts.kwargs) -> None:
+        async def unique_func(cls: type, *args: Ts.args, **kwargs: Ts.kwargs) -> S:
             arg = _get_only_arg(args, kwargs)
             if not hasattr        (cls, f'_unique'):
                 setattr           (cls, f'_unique', {})
@@ -146,7 +171,7 @@ def _get_only_arg(args: tuple[typing.Any, ...], kwargs: dict[str, typing.Any]) -
 def _set_only_arg(args: tuple[typing.Any, ...], kwargs: dict[str, typing.Any], operation: typing.Callable[[typing.Any], typing.Any]) -> typing.Any:
     assert len(args) + len(kwargs) == 1
     if len(args) == 1:
-        return tuple(operation(args[0])), kwargs
+        return (operation(args[0]), ), kwargs
     elif len(kwargs) == 1:
         return args, {list(kwargs.keys())[0]: operation(list(kwargs.values())[0])}
     else:

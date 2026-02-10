@@ -1,3 +1,8 @@
+from cppmakelib.utility.time import time
+import os
+import shutil
+import typing
+
 path = str
 
 def absolute_path      (path     : path)                -> path                 : ...
@@ -11,17 +16,12 @@ def exist_file         (file     : path)                -> bool                 
 def modified_time_file (file     : path)                -> time                 : ...
 def parent_dir         (path     : path)                -> path                 : ...
 def relative_path      (from_path: path, to_path: path) -> path                 : ...
-def replace_suffix_file(file     : path, suffix : str)  -> path                 : ...
 def remove_dir         (dir      : path)                -> None                 : ...
 def remove_file        (file     : path)                -> None                 : ...
+def replace_suffix_file(file     : path, suffix : str)  -> path                 : ...
 def root_dir           (path     : path)                -> path                 : ...
 
 
-
-from cppmakelib.utility.time import time
-import os
-import shutil
-import typing
 
 def absolute_path(path: path) -> path:
     return os.path.abspath(path)
@@ -67,6 +67,9 @@ def remove_file(file: path) -> None:
         os.remove(file)
     except FileNotFoundError:
         pass
+
+def replace_suffix_file(file: path, suffix : str) -> path:
+    return f'{os.path.splitext(file)[0]}{suffix}'
         
 def root_dir(path: path) -> path:
     return os.path.splitroot(path)[0]

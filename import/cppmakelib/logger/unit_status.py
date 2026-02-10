@@ -1,3 +1,18 @@
+from cppmakelib.compiler.all       import compiler
+from cppmakelib.error.logic        import LogicError
+from cppmakelib.utility.decorator  import lifetime, member
+from cppmakelib.utility.filesystem import create_dir, parent_dir, path
+import atexit
+import json
+import re
+import typing
+if typing.TYPE_CHECKING:
+    from cppmakelib.unit.code   import Code
+    from cppmakelib.unit.module import Module
+    from cppmakelib.unit.source import Source
+    from cppmakelib.unit.object import Object
+
+
 class UnitStatusLogger:
     # ========
     def           __init__                (self, build_utility_dir: path)                   -> None      : ...
@@ -18,8 +33,6 @@ class UnitStatusLogger:
     def             get_source_compiled   (self, source: Source)                            -> bool      : ...
     def             set_source_compiled   (self, source: Source,  compiled    : bool)       -> None      : ...
     # ========
-    def             get_object_libs       (self, object: Object)                            -> list[path]: ...
-    def             set_object_libs       (self, object: Object,  libs        : list[path]) -> None      : ...
     def             get_object_shared     (self, object: Object)                            -> bool      : ...
     def             set_object_shared     (self, object: Object,  shared      : bool)       -> None      : ...
     def             get_object_linked     (self, object: Object)                            -> bool      : ...
@@ -28,27 +41,13 @@ class UnitStatusLogger:
 
     class _StatusNotFoundError(KeyError):
         pass
-    def _get    (self, entry: list[str], check: dict[str, typing.Any], result: str)                   -> typing.Any           : ...
-    def _set    (self, entry: list[str], check: dict[str, typing.Any], result: dict[str, typing.Any]) -> None                 : ...
-    def _reflect(self, object: object)                                                                -> dict[str, typing.Any]: ...
-    _file   : path
-    _content: typing.Any
+    def _get    (self, entry: list[str], check: dict[str, typing.Any], result: str)        -> typing.Any: ...
+    def _set    (self, entry: list[str], check: dict[str, typing.Any], result: typing.Any) -> None      : ...
+    def _reflect(self, object: object, depth: int = 1)                                      -> typing.Any: ...
+    _file    : path  
+    _content : typing.Any
     
 
-
-from cppmakelib.compiler.all       import compiler
-from cppmakelib.error.logic        import LogicError
-from cppmakelib.executor.operation import when_all
-from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import create_dir, parent_dir, path
-import json
-import re
-import typing
-if typing.TYPE_CHECKING:
-    from cppmakelib.unit.code   import Code
-    from cppmakelib.unit.module import Module
-    from cppmakelib.unit.object import Object
-    from cppmakelib.unit.source import Source
 
 @member(UnitStatusLogger)
 def __init__(self: UnitStatusLogger, build_utility_dir: path) -> None:
@@ -57,13 +56,13 @@ def __init__(self: UnitStatusLogger, build_utility_dir: path) -> None:
         self._content = json.load(open(self._file, 'r'))
     except:
         self._content = {}
+    atexit.register(self.__del__)
 
-_json = json
-_open = open
 @member(UnitStatusLogger)
+@lifetime(open, json, print, create_dir, parent_dir)
 def __del__(self: UnitStatusLogger) -> None:
     create_dir(parent_dir(self._file))
-    _json.dump(self._content, _open(self._file, 'w'), indent=4)
+    json.dump(self._content, open(self._file, 'w'), indent=4)
 
 @member(UnitStatusLogger)
 def get_code_preprocessed(self: UnitStatusLogger, code: Code) -> bool:
@@ -109,7 +108,7 @@ async def async_get_module_imports(self: UnitStatusLogger, module: Module) -> li
     except UnitStatusLogger._StatusNotFoundError:
         await module.async_preprocess()
         imports = re.findall(
-            pattern=r'^\s*(?:export\s+)?import\s+module\s+(\w+(?:[\.:]\w+)*)\s*;\s$',
+            pattern=r'^\s*(?:export\s+)?import\s+(\w+(?:[\.:]\w+)*)\s*;\s*$',
             string =open(module.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
@@ -119,8 +118,7 @@ async def async_get_module_imports(self: UnitStatusLogger, module: Module) -> li
 
 @member(UnitStatusLogger)
 async def async_set_module_imports(self: UnitStatusLogger, module: Module, imports: list[path]) -> None:
-    self._set(entry=['module', 'imports', module.file],        check={'module': module,                     'compiler': compiler}, result={'imports': imports})
-    self._set(entry=['object', 'libs',    module.object_file], check={'object': Object(module.object_file), 'compiler': compiler}, result={'libs'   : [module.object_file for module in await when_all([Module.__anew__(Module, import_) for import_ in imports])]})
+    self._set(entry=['module', 'imports', module.file], check={'module': module, 'compiler': compiler}, result={'imports': imports})
 
 @member(UnitStatusLogger)
 def get_module_precompiled(self: UnitStatusLogger, module: Module) -> bool:
@@ -140,7 +138,7 @@ async def async_get_source_imports(self: UnitStatusLogger, source: Source) -> li
     except UnitStatusLogger._StatusNotFoundError:
         await source.async_preprocess()
         imports = re.findall(
-            pattern=r'^\s*import\s+module\s+(\w+(?:[\.:]\w+)*)\s*;\s$',
+            pattern=r'^\s*import\s+(\w+(?:[\.:]\w+)*)\s*;\s*$',
             string =open(source.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
@@ -150,8 +148,7 @@ async def async_get_source_imports(self: UnitStatusLogger, source: Source) -> li
 
 @member(UnitStatusLogger)
 async def async_set_source_imports(self: UnitStatusLogger, source: Source, imports: list[path]) -> None:
-    self._set(entry=['source', 'imports', source.file],        check={'source': source,                     'compiler': compiler}, result={'imports': imports})
-    self._set(entry=['object', 'libs',    source.object_file], check={'object': Object(source.object_file), 'compiler': compiler}, result={'libs'   : [module.object_file for module in await when_all([Module.__anew__(Module, import_) for import_ in imports])]})
+    self._set(entry=['source', 'imports', source.file], check={'source': source, 'compiler': compiler}, result={'imports': imports})
 
 @member(UnitStatusLogger)
 def get_source_compiled(self: UnitStatusLogger, source: Source) -> bool:
@@ -210,7 +207,7 @@ def _get(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any],
     return ptr[result]
 
 @member(UnitStatusLogger)
-def _set(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any], result: dict[str, typing.Any]) -> None:
+def _set(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any], result: typing.Any) -> None:
     ptr = self._content
     for subentry in entry:
         if subentry not in ptr.keys():
@@ -222,15 +219,21 @@ def _set(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any],
         ptr[subresult] = self._reflect(result[subresult])
 
 @member(UnitStatusLogger)
-def _reflect(self: UnitStatusLogger, object: object) -> dict[str, typing.Any]:
-    reflected = vars(object)
-    for key, value in reflected.items():
-        if hasattr(value, '__dict__'):
-            reflected[key] = '...'
-        elif isinstance(value, list):
-            for index, subvalue in enumerate(typing.cast(list[object], value)):
-                value[index] = self._reflect(subvalue)
-        else:
-            reflected.pop(key)
-    return reflected
+def _reflect(self: UnitStatusLogger, object: object, depth: int = 1) -> typing.Any:
+    
+
+
+    if not hasattr(object, '__dict__'):
+        return object
+    else:
+        reflected: dict[str, typing.Any] = {}
+        for key, value in vars(object).items():
+            if not key.startswith('_'):
+                if hasattr(value, '__dict__'):
+                    reflected[key] = '...'
+                elif isinstance(value, list):
+                    reflected[key] = [self._reflect(subvalue) for subvalue in typing.cast(list[object], value)]
+                else:
+                    reflected[key] = value
+        return reflected
         

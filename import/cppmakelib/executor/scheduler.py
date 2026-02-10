@@ -1,4 +1,7 @@
-from cppmakelib.basic.config import config
+from cppmakelib.basic.config      import config
+from cppmakelib.utility.decorator import member
+import asyncio
+import typing
 
 class Scheduler:
     def __init__(self, value: int = config.jobs) -> None                            : ...
@@ -20,10 +23,6 @@ class Scheduler:
 scheduler: Scheduler
 
 
-
-from cppmakelib.utility.decorator import member
-import asyncio
-import typing
 
 @member(Scheduler)
 def __init__(self: Scheduler, value: int = config.jobs) -> None:

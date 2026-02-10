@@ -1,3 +1,8 @@
+from cppmakelib.error.config       import ConfigError
+from cppmakelib.utility.decorator  import member
+from cppmakelib.utility.filesystem import path
+import sys
+
 class Macos:
     def __init__(self) -> None: ...
     executable_suffix: str  = ''
@@ -9,11 +14,6 @@ class Macos:
     def _check(self) -> None: ...
 
 
-
-from cppmakelib.error.config       import ConfigError
-from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
-import sys
 
 @member(Macos)
 def __init__(self: Macos) -> None:

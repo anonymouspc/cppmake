@@ -1,4 +1,11 @@
-from cppmakelib.basic.config import config
+from cppmakelib.basic.config            import config
+from cppmakelib.error.subprocess        import SubprocessError
+from cppmakelib.executor.operation      import when_all
+from cppmakelib.executor.scheduler      import Scheduler
+from cppmakelib.logger.compile_commands import compile_commands_logger
+from cppmakelib.utility.filesystem      import path
+import asyncio
+import sys
 import typing
 
 @typing.overload
@@ -12,13 +19,7 @@ async def async_run(file: path, args: list[str] = [], cwd: path = '.', print_com
 
 
 
-from cppmakelib.error.subprocess        import SubprocessError
-from cppmakelib.executor.operation      import when_all
-from cppmakelib.executor.scheduler      import Scheduler
-from cppmakelib.logger.compile_commands import compile_commands_logger
-from cppmakelib.utility.filesystem      import path
-import asyncio
-import sys
+
 
 _internal_scheduler = Scheduler(config.jobs)
 async def async_run(

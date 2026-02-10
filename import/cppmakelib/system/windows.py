@@ -1,3 +1,8 @@
+from cppmakelib.error.config       import ConfigError
+from cppmakelib.utility.decorator  import member
+from cppmakelib.utility.filesystem import path
+import sys
+
 class Windows:
     def __init__(self) -> None: ...
     executable_suffix: str  = '.exe'
@@ -9,11 +14,6 @@ class Windows:
     def _check(self) -> None: ...
 
 
-
-from cppmakelib.error.config       import ConfigError
-from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
-import sys
 
 @member(Windows)
 def __init__(self: Windows) -> None:

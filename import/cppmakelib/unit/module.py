@@ -1,4 +1,12 @@
-from cppmakelib.unit.code import Code
+from cppmakelib.compiler.all       import compiler
+from cppmakelib.executor.operation import when_all
+from cppmakelib.executor.scheduler import scheduler
+from cppmakelib.system.all         import system
+from cppmakelib.unit.code          import Code
+from cppmakelib.unit.precompiled   import Precompiled
+from cppmakelib.utility.algorithm  import recursive_collect
+from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
+from cppmakelib.utility.filesystem import path
 
 class Module(Code):
     def           __new__         (cls: ..., file: path) -> Module     : ...
@@ -16,15 +24,6 @@ class Module(Code):
     import_modules  : list[Module]
 
 
-
-from cppmakelib.compiler.all       import compiler
-from cppmakelib.executor.operation import when_all
-from cppmakelib.executor.scheduler import scheduler
-from cppmakelib.system.all         import system
-from cppmakelib.unit.precompiled   import Precompiled
-from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import path
 
 @member(Module)
 @syncable
@@ -53,8 +52,8 @@ async def async_precompile(self: Module) -> Precompiled:
                 object_file     =self.object_file,
                 compile_flags   =self.compile_flags,
                 define_macros   =self.define_macros,
-                include_dirs    =[self.context_package.build_include_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
                 import_dirs     =[self.context_package.build_import_dir]  + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_import_dir),
+                include_dirs    =[self.context_package.build_include_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
                 diagnostic_file =self.diagnostic_file,
             )
         self.context_package.unit_status_logger.set_module_precompiled(module=self, precompiled=True)
