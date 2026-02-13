@@ -2,10 +2,12 @@
     "python.analysis.typeCheckingMode": "strict",
     "python.analysis.diagnosticSeverityOverrides": {
         "reportNoOverloadImplementation": "none",
+        "reportOverlappingOverload": "none",
         "reportPrivateUsage": "none",
         "reportRedeclaration": "none",
         "reportSelfClsParameterName": "none",
         "reportUnusedFunction": "none",
+
         "reportUnusedImport": "warning",
         "reportUnusedVariable": "warning"
     },

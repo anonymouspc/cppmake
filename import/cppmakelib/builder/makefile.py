@@ -4,15 +4,19 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import absolute_path, create_dir, path, remove_dir
+from cppmakelib.utility.filesystem import absolute_path, create_dir, path, remove_dir, resolvable_path
 from cppmakelib.utility.version    import Version
 
 class Makefile:
-    def           __init__(self, file: path = 'make')                                                              -> None: ...
-    async def    __ainit__(self, file: path = 'make')                                                              -> None: ...
-    def             build (self, configure_file: path, build_dir: path, install_dir: path, build_flags: list[str]) -> None: ...
-    async def async_build (self, configure_file: path, build_dir: path, install_dir: path, build_flags: list[str]) -> None: ...
-    file       : path
+    def           __init__   (self, file: resolvable_path = 'make')                                -> None: ...
+    async def    __ainit__   (self, file: resolvable_path = 'make')                                -> None: ...
+    def             configure(self, configure_file: path, build_dir: path, build_flags: list[str]) -> None: ...
+    async def async_configure(self, configure_file: path, build_dir: path, build_flags: list[str]) -> None: ...
+    def             build    (self, build_dir: path)                                               -> None: ...
+    async def async_build    (self, build_dir: path)                                               -> None: ...
+    def             install  (self, build_dir: path, install_dir: path)                            -> None: ...
+    async def async_install  (self, build_dir: path, install_dir: path)                            -> None: ...
+    file       : resolvable_path
     version    : Version
     build_flags: list[str]
 
@@ -34,11 +38,10 @@ async def __ainit__(self: Makefile, file: path = 'make') -> None:
 
 @member(Makefile)
 @syncable
-async def async_build(
-    self: Makefile, 
+async def async_configure(
+    self          : Makefile, 
     configure_file: path,
     build_dir     : path, 
-    install_dir   : path, 
     build_flags   : list[str], 
 ) -> None:
     try:
@@ -46,31 +49,43 @@ async def async_build(
         await async_run(
             file=configure_file,
             args=[
-                *(self.build_flags + build_flags),
-                f'--prefix={absolute_path(install_dir)}',
+                *(self.build_flags + build_flags)
             ],
             cwd=build_dir
         )
     except:
         remove_dir(build_dir)
         raise
-    try:
-        await async_run(
-            file=self.file,
-            args=[
-                '-C', build_dir,
-                '-j', str(config.jobs)
-            ]
-        )
-    except:
-        raise
+
+@member(Makefile)
+@syncable
+async def async_build(
+    self     : Makefile,
+    build_dir: path
+) -> None:
+    await async_run(
+        file=self.file,
+        args=[
+            '-C', build_dir,
+            '-j', str(config.jobs)
+        ]
+    )
+
+@member(Makefile)
+@syncable
+async def async_install(
+    self       : Makefile,
+    build_dir  : path,
+    install_dir: path
+) -> None:
     try:
         create_dir(install_dir)
         await async_run(
             file=self.file,
             args=[
-                'install'
                 '-C', build_dir,
+                'install'
+                '--prefix', absolute_path(install_dir),
                 '-j', str(config.jobs)
             ]
         )

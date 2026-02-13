@@ -1,15 +1,16 @@
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.filesystem import path, resolvable_path
 import sys
 
 class Windows:
     def __init__(self) -> None: ...
-    executable_suffix: str  = '.exe'
-    object_suffix    : str  = '.obj'
-    static_suffix    : str  = '.lib'
-    dynamic_suffix   : str  = '.dll'
-    compiler         : path = 'cl.exe'
+    executable_suffix: str             = '.exe'
+    object_suffix    : str             = '.obj'
+    static_suffix    : str             = '.lib'
+    dynamic_suffix   : str             = '.dll'
+    compiler         : resolvable_path = 'cl.exe'
+    install_dir      : path            = 'C:\\Program Files'
 
     def _check(self) -> None: ...
 

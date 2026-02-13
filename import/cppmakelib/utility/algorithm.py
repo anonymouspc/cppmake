@@ -16,26 +16,37 @@ def recursive_collect[T, U, R](
     collect: typing.Callable[[T], R | list[R] | None], 
     flatten: bool = False
 ) -> list[R]:
-   return _recursive_collect_impl(node=node, next=next, collect=collect, flatten=flatten, root=True, visited=set(), collected=list())
+   return _recursive_collect_impl_root(node=node, next=next, collect=collect, flatten=flatten)
 
-def _recursive_collect_impl[T, U, R](
-    node     : U | T, 
-    next     : typing.Callable[[U | T], list[T]], 
-    collect  : typing.Callable[[T], R | list[R] | None], 
+def _recursive_collect_impl_root[T, U, R](
+    node     : U,
+    next     : typing.Callable[[U | T], list[T]],
+    collect  : typing.Callable[[T], R | list[R] | None],
+    flatten  : bool
+) -> list[R]:
+    visited  = set[T]()
+    collected= list[R]()
+    for subnode in next(node):
+        _recursive_collect_impl_branch(node=subnode, next=next, collect=collect, flatten=flatten, visited=visited, collected=collected)
+    return collected
+
+def _recursive_collect_impl_branch[T, R](
+    node     : T,
+    next     : typing.Callable[[T], list[T]],
+    collect  : typing.Callable[[T], R | list[R] | None],
     flatten  : bool,
-    root     : bool,
     visited  : set[T],
     collected: list[R]
-) -> list[R]:
+) -> None:
     if node not in visited:
-        if not root:
-            visited |= {typing.cast(T, node)}
-            value = collect(typing.cast(T, node))
-            if value is not None and value not in collected:
-                if not flatten:
-                    collected += [typing.cast(R, value)]
-                else:
-                    collected += typing.cast(list[R], value)
+        visited |= {node}
+        value = collect(node)
+        if value is not None and value not in collected:
+            if not flatten:
+                assert not isinstance(value, list)
+                collected += [value]
+            else:
+                assert isinstance(value, list)
+                collected += value
         for subnode in next(node):
-            _recursive_collect_impl(node=subnode, next=next, collect=collect, flatten=flatten, root=False, visited=visited, collected=collected)
-    return collected
+            _recursive_collect_impl_branch(node=subnode, next=next, collect=collect, flatten=flatten, visited=visited, collected=collected)

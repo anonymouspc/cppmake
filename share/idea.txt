@@ -1,2 +1,0 @@
-Object构造函数应该需要from_code, Object.lib_objects应当自己推断而不是找unit_status_logger
-同理Precompiled.install需要自己找子install而不依赖于unit_status_logger

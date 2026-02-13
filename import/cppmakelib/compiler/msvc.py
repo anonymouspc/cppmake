@@ -4,7 +4,6 @@ class Msvc:
     precompiled_suffix  = '.ixx'
 
     @syncable
-    @unique
     async def __ainit__(self, path='cl'):
         self.path    = path
         self.version = await self._async_get_version()

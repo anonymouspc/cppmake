@@ -2,14 +2,14 @@ from cppmakelib.basic.config       import config
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import create_dir, exist_file, iterate_dir, parent_dir, path
+from cppmakelib.utility.decorator  import member, syncable, unique_on
+from cppmakelib.utility.filesystem import create_dir, exist_file, get_file_name, iterate_dir, join_path, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file
 from cppmakelib.utility.version    import Version
 import re
 
 class Gcc:
-    def           __init__    (self, file: path = 'g++')                                                                                                                                                                                                                  -> None: ...
-    async def    __ainit__    (self, file: path = 'g++')                                                                                                                                                                                                                  -> None: ...
+    def           __init__    (self, file: resolvable_path = 'g++')                                                                                                                                                                                                       -> None: ...
+    async def    __ainit__    (self, file: resolvable_path = 'g++')                                                                                                                                                                                                       -> None: ...
     def             preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                     -> None: ...
     async def async_preprocess(self, code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                                                     -> None: ...
     def             preparse  (self, header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                                diagnostic_file: path | None = None) -> None: ...
@@ -26,7 +26,7 @@ class Gcc:
     preparsed_suffix   : str = '.gch'
     precompiled_suffix : str = '.gcm'  
     diagnostic_suffix  : str = '.sarif'
-    file               : path
+    file               : resolvable_path
     version            : Version
     compile_flags      : list[str]
     link_flags         : list[str]
@@ -44,9 +44,10 @@ class Gcc:
 
 @member(Gcc)
 @syncable
-async def __ainit__(self: Gcc, file: path = 'g++') -> None:
-    self.file               = file
-    self.version            = await self._async_get_version()
+@unique_on(resolve_file)
+async def __ainit__(self: Gcc, file: resolvable_path = 'g++') -> None:
+    self.file    = file
+    self.version = await self._async_get_version()
     self.compile_flags = [
         f'-std={config.std}', '-fmodules', 
         *(['-O0', '-g'] if config.type == 'debug'   else
@@ -114,7 +115,6 @@ async def async_preparse(
         log_command=header_file
     )
     
-
 @member(Gcc)
 @syncable
 async def async_precompile(
@@ -229,21 +229,21 @@ async def _async_get_stdlib_module_file(self: Gcc) -> path:
         flags  =re.MULTILINE
     )
     if search_dirs is None:
-        raise ConfigError(f'libstdc++ module_file is not found')
-    search_dirs  = [path(search_dir.strip())    for search_dir in search_dirs.group(1).splitlines()]
-    search_files = [f'{search_dir}/bits/std.cc' for search_dir in search_dirs]
+        raise ConfigError('libstdc++ module_file is not found')
+    search_dirs  = [path(search_dir.strip())                for search_dir in search_dirs.group(1).splitlines()]
+    search_files = [join_path(search_dir, 'bits', 'std.cc') for search_dir in search_dirs]
     for search_file in search_files:
         if exist_file(search_file):
-            return search_file
+            return normal_path(search_file)
     else:
         raise ConfigError(f'libstdc++ module_file is not found (with search_files = {search_files})')
 
 @member(Gcc)
 def _write_mapper(self: Gcc, target_file: path, import_files: list[path] = [], import_dirs: list[path] = []) -> path:
-    mapper_file = f'{target_file.rpartition('.')[0]}.mapper'
+    mapper_file = replace_file_suffix(target_file, 'mapper')
     writer = open(mapper_file, 'w')
     for file in import_files + [import_file for import_dir in import_dirs for import_file in iterate_dir(import_dir) if import_file.endswith(Gcc.precompiled_suffix)]:
-        name = file.split('/')[-1].removesuffix(self.precompiled_suffix).replace('-', ':') # TODO: get rid of split('/').
+        name = get_file_name(remove_file_suffix(file)).replace('-', ':')
         writer.write(f'{name} {file}\n')
     writer.close()
     return mapper_file

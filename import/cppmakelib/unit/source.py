@@ -1,3 +1,4 @@
+from cppmakelib.basic.context      import context
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.executor.operation import when_all
 from cppmakelib.executor.scheduler import scheduler
@@ -6,8 +7,8 @@ from cppmakelib.unit.code          import Code
 from cppmakelib.unit.module        import Module
 from cppmakelib.unit.object        import Object
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import path, relative_path, replace_suffix_file
+from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
+from cppmakelib.utility.filesystem import join_path, normal_path, path, relative_path, replace_file_suffix
 
 class Source(Code):
     def           __new__      (cls: ..., file: path) -> Source: ...
@@ -26,12 +27,12 @@ class Source(Code):
 
 @member(Source)
 @syncable
-@unique
-@relocatable
+@unique_in(context.package)
+@pre(normal_path)
 async def __ainit__(self: Source, file: path) -> None:
     await super(Source, self).__ainit__(file)
-    self.object_file     = f'{self.context_package.build_dir}/{replace_suffix_file(relative_path(from_path=self.context_package.dir, to_path=file), system.object_suffix)}'
-    self.diagnostic_file = f'{self.context_package.build_dir}/{replace_suffix_file(relative_path(from_path=self.context_package.dir, to_path=file), compiler.diagnostic_suffix)}'
+    self.object_file     = join_path(self.context_package.build_dir, replace_file_suffix(relative_path(from_path=self.context_package.dir, to_path=file), system.object_suffix))
+    self.diagnostic_file = join_path(self.context_package.build_dir, replace_file_suffix(relative_path(from_path=self.context_package.dir, to_path=file), compiler.diagnostic_suffix))
     self.import_modules  = await when_all([Module.__anew__(Module, file) for file in await self.context_package.unit_status_logger.async_get_source_imports(source=self)])
 
 @member(Source)

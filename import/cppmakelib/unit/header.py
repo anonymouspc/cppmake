@@ -4,7 +4,7 @@ from cppmakelib.executor.scheduler import scheduler
 from cppmakelib.unit.code          import Code
 from cppmakelib.unit.preparsed     import Preparsed
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
+from cppmakelib.utility.decorator  import member, once, syncable, unique
 from cppmakelib.utility.filesystem import path, relative_path
 
 class Header(Code):
@@ -27,12 +27,11 @@ class Header(Code):
 @member(Header)
 @syncable
 @unique
-@relocatable
 async def __ainit__(self: Header, file: path) -> None:
     await super(Header, self).__ainit__(file)
     self.name            = relative_path(from_path=self.context_package.search_header_dir, to_path=self.file)
-    self.preparsed_file  = f'{self.context_package.build_header_dir}/{self.name}{compiler.preparsed_suffix}'
-    self.diagnostic_file = f'{self.context_package.build_header_dir}/{self.name}{compiler.diagnostic_suffix}'
+    self.preparsed_file  = join_path(self.context_package.build_header_dir, self.name, compiler.preparsed_suffix)
+    self.diagnostic_file = join_path(self.context_package.build_header_dir, self.name, compiler.diagnostic_suffix)
     self.include_headers = await when_all([Header.__anew__(Header, file) for file in self.context_package.unit_status_logger.get_header_includes(header=self)])
 
 @member(Header)

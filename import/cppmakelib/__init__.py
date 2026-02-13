@@ -1,8 +1,5 @@
 from cppmakelib.basic.config        import config
 
-from cppmakelib.builder.cmake       import cmake
-from cppmakelib.builder.makefile    import makefile
-
 from cppmakelib.compiler.all        import compiler
 from cppmakelib.compiler.clang      import Clang
 from cppmakelib.compiler.emcc       import Emcc
@@ -23,7 +20,7 @@ from cppmakelib.system.windows      import Windows
 from cppmakelib.unit.executable     import Executable
 from cppmakelib.unit.header         import Header
 from cppmakelib.unit.module         import Module
-from cppmakelib.unit.package        import Package, MainPackage, main_package
+from cppmakelib.unit.package        import Package, main_package
 from cppmakelib.unit.source         import Source
 
-self: Package = main_package
+self: Package

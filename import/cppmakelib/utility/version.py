@@ -1,6 +1,7 @@
 from cppmakelib.utility.decorator import member
 import functools
 import re
+import typing
 
 @functools.total_ordering
 class Version:
@@ -8,12 +9,12 @@ class Version:
         pattern : str
         string  : str
         position: int
-    def __init__(self, subversions: list[int])                        -> None   : ...
-    def __str__ (self)                                                -> str    : ...
-    def __eq__  (self, other_version: Version | object)               -> bool   : ...
-    def __lt__  (self, other_version: Version | int | float | object) -> bool   : ...
+    def __init__(self, subversions: list[int])                            -> None   : ...
+    def __str__ (self)                                                    -> str    : ...
+    def __eq__  (self, other_version: Version | typing.Any)               -> bool   : ...
+    def __lt__  (self, other_version: Version | int | float | typing.Any) -> bool   : ...
     @staticmethod
-    def parse   (pattern: str, string: str)                           -> Version: ...
+    def parse   (pattern: str, string: str)                               -> Version: ...
     subversions: list[int]
 
 
@@ -27,14 +28,14 @@ def __str__(self: Version) -> str:
     return '.'.join([str(subversion) for subversion in self.subversions])
 
 @member(Version)
-def __eq__(self: Version, other: Version | object) -> bool:
+def __eq__(self: Version, other: Version | typing.Any) -> bool:
     if isinstance(other, Version):
         return self.subversions == other.subversions
     else:
         return NotImplemented
     
 @member(Version)
-def __lt__(self: Version, other: Version | int | float | object) -> bool:
+def __lt__(self: Version, other: Version | int | float | typing.Any) -> bool:
     if isinstance(other, Version):
         return self.subversions < other.subversions
     elif isinstance(other, int):

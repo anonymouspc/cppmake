@@ -1,3 +1,4 @@
+from cppmakelib.basic.context      import context
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.executor.operation import when_all
 from cppmakelib.executor.scheduler import scheduler
@@ -5,8 +6,8 @@ from cppmakelib.system.all         import system
 from cppmakelib.unit.code          import Code
 from cppmakelib.unit.precompiled   import Precompiled
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.decorator  import member, pre, once, syncable, unique_in
+from cppmakelib.utility.filesystem import add_file_suffix, join_path, normal_path, path
 
 class Module(Code):
     def           __new__         (cls: ..., file: path) -> Module     : ...
@@ -27,14 +28,14 @@ class Module(Code):
 
 @member(Module)
 @syncable
-@unique
-@relocatable
+@unique_in(context.package)
+@pre(normal_path)
 async def __ainit__(self: Module, file: path) -> None:
     await super(Module, self).__ainit__(file)
     self.name             = await self.context_package.unit_status_logger.async_get_module_name(module=self)
-    self.precompiled_file = f'{self.context_package.build_import_dir}/{self.name.replace(':', '-')}{compiler.precompiled_suffix}'
-    self.object_file      = f'{self.context_package.build_import_dir}/{self.name.replace(':', '-')}{system.object_suffix}'
-    self.diagnostic_file  = f'{self.context_package.build_import_dir}/{self.name.replace(':', '.')}{compiler.diagnostic_suffix}'
+    self.precompiled_file = join_path(self.context_package.build_import_dir, add_file_suffix(self.name.replace(':', '-'), compiler.precompiled_suffix))
+    self.object_file      = join_path(self.context_package.build_import_dir, add_file_suffix(self.name.replace(':', '-'), system.object_suffix))
+    self.diagnostic_file  = join_path(self.context_package.build_import_dir, add_file_suffix(self.name.replace(':', '.'), compiler.diagnostic_suffix))
     self.import_modules   = await when_all([Module.__anew__(Module, file) for file in await self.context_package.unit_status_logger.async_get_module_imports(module=self)])
 
 @member(Module)

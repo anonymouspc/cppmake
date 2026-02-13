@@ -1,11 +1,12 @@
 from cppmakelib.basic.config       import config
+from cppmakelib.basic.context      import context
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.executor.scheduler import scheduler
 from cppmakelib.unit.package       import Package
 from cppmakelib.unit.preprocessed  import Preprocessed
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, relocatable, syncable, unique
-from cppmakelib.utility.filesystem import modified_time_file, path, relative_path, replace_suffix_file
+from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
+from cppmakelib.utility.filesystem import get_file_modify_time, join_path, normal_path, path, relative_path, replace_file_suffix
 from cppmakelib.utility.time       import time
 
 class Code:
@@ -18,7 +19,7 @@ class Code:
     def             is_preprocessed(self)                 -> bool        : ...
     async def async_is_preprocessed(self)                 -> bool        : ...
     file             : path
-    modified_time    : time
+    modify_time      : time
     context_package  : Package
     preprocessed_file: path
     compile_flags    : list[str]
@@ -28,14 +29,13 @@ class Code:
 
 @member(Code)
 @syncable
-@unique
-@relocatable
+@unique_in(context.package)
+@pre(normal_path)
 async def __ainit__(self: Code, file: path) -> None:
-    from cppmakelib.basic.context import context
     self.file              = file
-    self.modified_time     = modified_time_file(self.file)
+    self.modify_time       = get_file_modify_time(self.file)
     self.context_package   = context.package
-    self.preprocessed_file = f'{self.context_package.build_dir}/{replace_suffix_file(relative_path(from_path=self.context_package.dir, to_path=self.file), compiler.preprocessed_suffix)}'
+    self.preprocessed_file = join_path(self.context_package.build_dir, replace_file_suffix(relative_path(from_path=self.context_package.dir, to_path=self.file), compiler.preprocessed_suffix))
     self.compile_flags     = self.context_package.compile_flags
     self.define_macros     = self.context_package.define_macros
 

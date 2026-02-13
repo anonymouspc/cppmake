@@ -1,7 +1,7 @@
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.logic        import LogicError
 from cppmakelib.utility.decorator  import lifetime, member
-from cppmakelib.utility.filesystem import create_dir, parent_dir, path
+from cppmakelib.utility.filesystem import add_file_suffix, create_dir, join_path, parent_dir, path
 import atexit
 import json
 import re
@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 
 class UnitStatusLogger:
     # ========
-    def           __init__                (self, build_utility_dir: path)                   -> None      : ...
+    def           __init__                (self, build_cache_dir: path)                     -> None      : ...
     def           __del__                 (self)                                            -> None      : ...
     # ========
     def             get_code_preprocessed (self, code  : Code)                              -> bool      : ...
@@ -43,15 +43,15 @@ class UnitStatusLogger:
         pass
     def _get    (self, entry: list[str], check: dict[str, typing.Any], result: str)        -> typing.Any: ...
     def _set    (self, entry: list[str], check: dict[str, typing.Any], result: typing.Any) -> None      : ...
-    def _reflect(self, object: object, depth: int = 1)                                      -> typing.Any: ...
+    def _reflect(self, variable: typing.Any, depth: int = 1)                               -> typing.Any: ...
     _file    : path  
     _content : typing.Any
     
 
 
 @member(UnitStatusLogger)
-def __init__(self: UnitStatusLogger, build_utility_dir: path) -> None:
-    self._file = f'{build_utility_dir}/unit_status.json'
+def __init__(self: UnitStatusLogger, build_cache_dir: path) -> None:
+    self._file = join_path(build_cache_dir, 'unit_status.json')
     try:
         self._content = json.load(open(self._file, 'r'))
     except:
@@ -112,7 +112,7 @@ async def async_get_module_imports(self: UnitStatusLogger, module: Module) -> li
             string =open(module.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
-        imports = [f'{module.context_package.import_dir}/{import_.replace('.', '/').replace(':', '/')}.cpp' for import_ in imports]
+        imports = [join_path(module.context_package.import_dir, add_file_suffix(join_path(*re.split(import_, r'\.:')), 'cpp')) for import_ in imports]
         await self.async_set_module_imports(module=module, imports=imports)
     return imports
 
@@ -142,7 +142,7 @@ async def async_get_source_imports(self: UnitStatusLogger, source: Source) -> li
             string =open(source.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
-        imports = [f'{source.context_package.import_dir}/{import_.replace('.', '/').replace(':', '/')}.cpp' for import_ in imports]
+        imports = [join_path(source.context_package.import_dir, add_file_suffix(join_path(*re.split(import_, r'\.:')), 'cpp')) for import_ in imports]
         await self.async_set_source_imports(source=source, imports=imports)
     return imports
 
@@ -202,7 +202,7 @@ def _get(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any],
             raise UnitStatusLogger._StatusNotFoundError()
         ptr = ptr[subentry]
     for subcheck in check.keys():
-        if ptr[subcheck] != self._reflect(ptr[subcheck]):
+        if ptr[subcheck] != self._reflect(check[subcheck]):
             raise UnitStatusLogger._StatusNotFoundError()
     return ptr[result]
 
@@ -219,21 +219,15 @@ def _set(self: UnitStatusLogger, entry: list[str], check: dict[str, typing.Any],
         ptr[subresult] = self._reflect(result[subresult])
 
 @member(UnitStatusLogger)
-def _reflect(self: UnitStatusLogger, object: object, depth: int = 1) -> typing.Any:
-    
-
-
-    if not hasattr(object, '__dict__'):
-        return object
+def _reflect(self: UnitStatusLogger, variable: typing.Any, depth: int = 1) -> typing.Any:
+    if isinstance(variable, (bool, int, float, str)):
+        return variable
+    elif isinstance(variable, list):
+        return [self._reflect(subvariable, depth - 1) for subvariable in typing.cast(list[typing.Any], variable) if self._reflect(subvariable, depth - 1) is not None]
+    elif isinstance(variable, dict):
+        return {subkey: self._reflect(subvalue, depth - 1) for subkey, subvalue in typing.cast(dict[typing.Any, typing.Any], variable).items() if self._reflect(subvalue, depth - 1) is not None}
+    elif hasattr(variable, '__dict__'):
+        return {subkey: self._reflect(subvalue, depth - 1) for subkey, subvalue in vars(typing.cast(object, variable)).items() if not subkey.startswith('_') and self._reflect(subvalue, depth - 1) is not None} if depth >= 1 else None
     else:
-        reflected: dict[str, typing.Any] = {}
-        for key, value in vars(object).items():
-            if not key.startswith('_'):
-                if hasattr(value, '__dict__'):
-                    reflected[key] = '...'
-                elif isinstance(value, list):
-                    reflected[key] = [self._reflect(subvalue) for subvalue in typing.cast(list[object], value)]
-                else:
-                    reflected[key] = value
-        return reflected
+        assert False
         

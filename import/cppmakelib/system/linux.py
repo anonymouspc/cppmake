@@ -1,15 +1,16 @@
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.filesystem import path, resolvable_path
 import sys
 
 class Linux:
     def __init__(self) -> None: ...
-    executable_suffix: str  = ''
-    object_suffix    : str  = '.o'
-    static_suffix    : str  = '.a'
-    dynamic_suffix   : str  = '.so'
-    compiler         : path = 'g++'
+    executable_suffix: str             = ''
+    object_suffix    : str             = '.o'
+    static_suffix    : str             = '.a'
+    dynamic_suffix   : str             = '.so'
+    compiler         : resolvable_path = 'g++'
+    install_dir      : path            = '/usr'
 
     def _check(self) -> None: ...
 

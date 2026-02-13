@@ -4,8 +4,8 @@ import asyncio
 import typing
 
 class Scheduler:
-    def __init__(self, value: int = config.jobs) -> None                            : ...
-    def schedule(self, value: int = 1)           -> typing.AsyncContextManager[None]: ...
+    def __init__(self, value: int)     -> None                            : ...
+    def schedule(self, value: int = 1) -> typing.AsyncContextManager[None]: ...
     max: int
 
     class _ContextManager:
@@ -25,7 +25,7 @@ scheduler: Scheduler
 
 
 @member(Scheduler)
-def __init__(self: Scheduler, value: int = config.jobs) -> None:
+def __init__(self: Scheduler, value: int) -> None:
     assert value >= 0
     self.max      = value
     self._value   = value
@@ -69,4 +69,4 @@ def _notify_all(self: Scheduler) -> None:
             self._value -= self._waiters[future]
             future.set_result(None)
 
-scheduler = Scheduler()
+scheduler = Scheduler(config.jobs)

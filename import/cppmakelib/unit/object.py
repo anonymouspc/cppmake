@@ -6,7 +6,7 @@ from cppmakelib.unit.dynamic       import Dynamic
 from cppmakelib.unit.executable    import Executable
 from cppmakelib.utility.algorithm  import recursive_collect
 from cppmakelib.utility.decorator  import member, once, syncable
-from cppmakelib.utility.filesystem import iterate_dir, path, replace_suffix_file
+from cppmakelib.utility.filesystem import iterate_dir, path, replace_file_suffix
 import typing
 if typing.TYPE_CHECKING:
     from cppmakelib.unit.module import Module
@@ -26,14 +26,14 @@ class Object(Binary):
     executable_file: path
     from_code      : Module | Source
     lib_objects    : list[Object]
-
+    
 
 
 @member(Object)
 def __init__(self: Object, file: path, from_code: Module | Source) -> None:
     super(Object, self).__init__(file)
-    self.dynamic_file    = replace_suffix_file(self.file, system.dynamic_suffix)
-    self.executable_file = replace_suffix_file(self.file, system.executable_suffix)
+    self.dynamic_file    = replace_file_suffix(self.file, system.dynamic_suffix)
+    self.executable_file = replace_file_suffix(self.file, system.executable_suffix)
     self.from_code       = from_code
     self.lib_objects     = recursive_collect(node=self.from_code, next=lambda code: code.import_modules, collect=lambda code: Object(code.object_file, code))
 

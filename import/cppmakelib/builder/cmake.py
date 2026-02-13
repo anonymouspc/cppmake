@@ -4,15 +4,19 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import create_dir, path, remove_dir
+from cppmakelib.utility.filesystem import create_dir, parent_dir, path, remove_dir, resolvable_path
 from cppmakelib.utility.version    import Version
 
 class Cmake: 
-    def           __init__(self, file: path = 'cmake')                                                                                   -> None: ...
-    async def    __ainit__(self, file: path = 'cmake')                                                                                   -> None: ...
-    def             build (self, package_dir: path, build_dir: path, install_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
-    async def async_build (self, package_dir: path, build_dir: path, install_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
-    file       : path
+    def           __init__   (self, file: resolvable_path = 'cmake')                                                         -> None: ...
+    async def    __ainit__   (self, file: resolvable_path = 'cmake')                                                         -> None: ...
+    def             configure(self, cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
+    async def async_configure(self, cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
+    def             build    (self, build_dir: path)                                                                         -> None: ...
+    async def async_build    (self, build_dir: path)                                                                         -> None: ...
+    def             install  (self, build_dir: path, install_dir: path)                                                      -> None: ...
+    async def async_install  (self, build_dir: path, install_dir: path)                                                      -> None: ...
+    file       : resolvable_path
     version    : Version
     build_flags: list[str]
 
@@ -24,7 +28,7 @@ cmake: Cmake
 
 @member(Cmake)
 @syncable
-async def __ainit__(self: Cmake, file: path = 'cmake') -> None:
+async def __ainit__(self: Cmake, file: resolvable_path = 'cmake') -> None:
     self.file        = file
     self.version     = await self._async_get_version()
     self.build_flags = [
@@ -35,13 +39,12 @@ async def __ainit__(self: Cmake, file: path = 'cmake') -> None:
 
 @member(Cmake)
 @syncable
-async def async_build(
+async def async_configure(
     self: Cmake, 
-    package_dir: path,
-    build_dir  : path,
-    install_dir: path,
-    build_flags: list[str], 
-    prefix_dirs: list[path]
+    cmakelists_file: path,
+    build_dir      : path,
+    build_flags    : list[str], 
+    prefix_dirs    : list[path]
 ) -> None:
     try:
         create_dir(build_dir)
@@ -49,31 +52,43 @@ async def async_build(
             file=self.file,
             args=[
                 *(self.build_flags + build_flags),
-                f'-DCMAKE_INSTALL_PREFIX={install_dir}',
                 f'-DCMAKE_PREFIX_PATH={';'.join(prefix_dirs)}',
-                '-S', package_dir,
+                '-S', parent_dir(cmakelists_file),
                 '-B', build_dir,
             ]
         )
     except:
         remove_dir(build_dir)
         raise
-    try:
-        await async_run(
-            file=self.file,
-            args=[
-                '--build', build_dir,
-                '-j',      str(config.jobs)
-            ]
-        )
-    except:
-        raise
+
+@member(Cmake)
+@syncable
+async def async_build(
+    self     : Cmake, 
+    build_dir: path
+) -> None:
+    await async_run(
+        file=self.file,
+        args=[
+            '--build', build_dir,
+            '-j',      str(config.jobs)
+        ]
+    )
+
+@member(Cmake)
+@syncable
+async def async_install(
+    self       : Cmake,
+    build_dir  : path,
+    install_dir: path
+) -> None:
     try:
         create_dir(install_dir)
         await async_run(
             file=self.file,
             args=[
                 '--install', build_dir,
+                '--prefix',  install_dir,
                 '-j',        str(config.jobs)
             ]
         )

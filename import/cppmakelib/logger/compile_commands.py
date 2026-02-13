@@ -1,5 +1,6 @@
+from cppmakelib.basic.config       import config
 from cppmakelib.utility.decorator  import lifetime, member
-from cppmakelib.utility.filesystem import absolute_path, create_dir, parent_dir, path
+from cppmakelib.utility.filesystem import absolute_path, create_dir, join_path, parent_dir, path
 import atexit
 import json
 import typing
@@ -18,7 +19,7 @@ compile_commands_logger: CompileCommandsLogger
 
 @member(CompileCommandsLogger)
 def __init__(self: CompileCommandsLogger) -> None:
-    self._file = '.cppmake/utility/compile_commands.json'
+    self._file = join_path(config.build_dir, '.cache', 'compile_commands.json')
     try:
         self._content = json.load(open(self._file, 'r'))
     except:
@@ -34,7 +35,7 @@ def __del__(self: CompileCommandsLogger) -> None:
 @member(CompileCommandsLogger)
 def log(self: CompileCommandsLogger, file: path, command: list[str]) -> None:
     for entry in self._content:
-        if entry['file'] == file:
+        if entry['directory'] == absolute_path('.') and entry['file'] == file:
             self._content.remove(entry)
     self._content.append({
         'directory': absolute_path('.'),

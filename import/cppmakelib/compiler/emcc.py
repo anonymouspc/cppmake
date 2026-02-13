@@ -3,14 +3,14 @@ from cppmakelib.compiler.clang     import Clang
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.decorator  import member, syncable, unique_on
+from cppmakelib.utility.filesystem import path, resolve_file, resolvable_path
 from cppmakelib.utility.version    import Version
 
 class Emcc(Clang):
-    def        __init__(self, file: path = 'em++') -> None: ...
-    async def __ainit__(self, file: path = 'em++') -> None: ...
-    file               : path
+    def        __init__(self, file: resolvable_path = 'em++') -> None: ...
+    async def __ainit__(self, file: resolvable_path = 'em++') -> None: ...
+    file               : resolvable_path
     version            : Version
     compile_flags      : list[str]
     link_flags         : list[str]
@@ -25,13 +25,12 @@ class Emcc(Clang):
 
 
 
-
-
 @member(Emcc)
 @syncable
-async def __ainit__(self: Emcc, file: path = 'em++') -> None:
-    self.file               = file
-    self.version            = await self._async_get_version()
+@unique_on(resolve_file)
+async def __ainit__(self: Emcc, file: resolvable_path = 'em++') -> None:
+    self.file    = file
+    self.version = await self._async_get_version()
     self.compile_flags = [
        f'-std={config.std}', '-fexceptions',
         *(['-O0', '-g'] if config.type == 'debug'   else
