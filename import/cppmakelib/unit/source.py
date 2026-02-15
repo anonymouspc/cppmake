@@ -54,7 +54,7 @@ async def async_compile(self: Source) -> Object:
                 diagnostic_file=self.diagnostic_file,
             )
         self.context_package.unit_status_logger.set_source_compiled(source=self, compiled=True)
-    return Object(self.object_file, self)
+    return Object(self.object_file, from_code=self)
 
 @member(Source)
 @syncable

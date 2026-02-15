@@ -1,7 +1,7 @@
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.logic        import LogicError
 from cppmakelib.utility.decorator  import lifetime, member
-from cppmakelib.utility.filesystem import add_file_suffix, create_dir, join_path, parent_dir, path
+from cppmakelib.utility.filesystem import add_file_suffix, join_path, parent_dir, path, try_create_dir
 import atexit
 import json
 import re
@@ -112,7 +112,7 @@ async def async_get_module_imports(self: UnitStatusLogger, module: Module) -> li
             string =open(module.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
-        imports = [join_path(module.context_package.import_dir, add_file_suffix(join_path(*re.split(import_, r'\.:')), 'cpp')) for import_ in imports]
+        imports = [join_path(module.context_package.import_dir, add_file_suffix(join_path(*re.split(pattern=r'[.:]', string=import_)), 'cpp')) for import_ in imports]
         await self.async_set_module_imports(module=module, imports=imports)
     return imports
 
@@ -142,7 +142,7 @@ async def async_get_source_imports(self: UnitStatusLogger, source: Source) -> li
             string =open(source.preprocessed_file, 'r').read(),
             flags  =re.MULTILINE
         )
-        imports = [join_path(source.context_package.import_dir, add_file_suffix(join_path(*re.split(import_, r'\.:')), 'cpp')) for import_ in imports]
+        imports = [join_path(source.context_package.import_dir, add_file_suffix(join_path(*re.split(pattern=r'[.:]', string=import_)), 'cpp')) for import_ in imports]
         await self.async_set_source_imports(source=source, imports=imports)
     return imports
 
@@ -226,8 +226,7 @@ def _reflect(self: UnitStatusLogger, variable: typing.Any, depth: int = 1) -> ty
         return [self._reflect(subvariable, depth - 1) for subvariable in typing.cast(list[typing.Any], variable) if self._reflect(subvariable, depth - 1) is not None]
     elif isinstance(variable, dict):
         return {subkey: self._reflect(subvalue, depth - 1) for subkey, subvalue in typing.cast(dict[typing.Any, typing.Any], variable).items() if self._reflect(subvalue, depth - 1) is not None}
-    elif hasattr(variable, '__dict__'):
-        return {subkey: self._reflect(subvalue, depth - 1) for subkey, subvalue in vars(typing.cast(object, variable)).items() if not subkey.startswith('_') and self._reflect(subvalue, depth - 1) is not None} if depth >= 1 else None
     else:
-        assert False
+        return {subkey: self._reflect(subvalue, depth - 1) for subkey, subvalue in vars(typing.cast(object, variable)).items() if not subkey.startswith('_') and self._reflect(subvalue, depth - 1) is not None} if depth >= 1 else None
+
         

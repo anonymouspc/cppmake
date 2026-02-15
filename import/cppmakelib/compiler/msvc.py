@@ -1,7 +1,7 @@
 class Msvc:
     name                = 'msvc'
-    intermediate_suffix = '.i'
-    precompiled_suffix  = '.ixx'
+    intermediate_suffix = 'i'
+    precompiled_suffix  = 'ixx'
 
     @syncable
     async def __ainit__(self, path='cl'):

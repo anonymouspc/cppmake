@@ -1,6 +1,6 @@
 from cppmakelib.utility.decorator import member
 
-class SubprocessError(Exception):
+class SubprocessError(ChildProcessError):
     command  : list[str]
     exit_code: int
     stdout   : str

@@ -4,7 +4,7 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import absolute_path, create_dir, path, remove_dir, resolvable_path
+from cppmakelib.utility.filesystem import absolute_path, create_dir, path, resolvable_path, try_create_dir, try_remove_dir
 from cppmakelib.utility.version    import Version
 
 class Makefile:
@@ -54,7 +54,7 @@ async def async_configure(
             cwd=build_dir
         )
     except:
-        remove_dir(build_dir)
+        try_remove_dir(build_dir)
         raise
 
 @member(Makefile)
@@ -79,7 +79,7 @@ async def async_install(
     install_dir: path
 ) -> None:
     try:
-        create_dir(install_dir)
+        try_create_dir(install_dir)
         await async_run(
             file=self.file,
             args=[
@@ -90,7 +90,7 @@ async def async_install(
             ]
         )
     except:
-        remove_dir(install_dir)
+        try_remove_dir(install_dir)
         raise
 
 @member(Makefile)

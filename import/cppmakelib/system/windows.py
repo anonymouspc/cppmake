@@ -5,10 +5,10 @@ import sys
 
 class Windows:
     def __init__(self) -> None: ...
-    executable_suffix: str             = '.exe'
-    object_suffix    : str             = '.obj'
-    static_suffix    : str             = '.lib'
-    dynamic_suffix   : str             = '.dll'
+    executable_suffix: str             = 'exe'
+    object_suffix    : str             = 'obj'
+    static_suffix    : str             = 'lib'
+    dynamic_suffix   : str             = 'dll'
     compiler         : resolvable_path = 'cl.exe'
     install_dir      : path            = 'C:\\Program Files'
 

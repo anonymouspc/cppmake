@@ -3,7 +3,8 @@ sys.dont_write_bytecode = True
 from cppmakelib import *
 
 def main():
-    pass
+    if main_package.cppmake is not None:
+        getattr(main_package.cppmake, config.target)()
 
 # def main():
 #     if not exist_dir("package/std"): # install std as default

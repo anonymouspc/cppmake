@@ -1,6 +1,6 @@
 from cppmakelib.system.all         import system
 from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.filesystem import current_dir, path
 import argparse
 import os
 import typing
@@ -33,7 +33,7 @@ config: Config
 def __init__(self: Config) -> None:
     self._parser = argparse.ArgumentParser()
     self._parser.usage = 'cppmake [project] [options...]'
-    self._parser.add_argument('project',    nargs='?',                            default='.',                help=f'path to C++ project dir   (example: ., .., /home/my/project; requires: containing cppmake.py; default: .)')
+    self._parser.add_argument('project',    nargs='?',                            default=current_dir(),      help=f'path to C++ project dir   (example: ., .., /home/my/project; requires: containing cppmake.py; default: .)')
     self._parser.add_argument('--target',                                         default='make',             help=f'select make target        (example: make, build, test; requires: defined in cppmake.py; default: make)')
     self._parser.add_argument('--compiler',                                       default=system.compiler,    help=f'use specific C++ compiler (example: g++, /usr/bin/g++, /opt/homebrew/clang++; requires: executable; default: {system.compiler})')
     self._parser.add_argument('--std',      choices=['c++20', 'c++23', 'c++26'],  default='c++26',            help=f'use specific C++ standard (default: c++26)')

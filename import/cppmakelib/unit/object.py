@@ -1,3 +1,4 @@
+from cppmakelib.basic.context      import context
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.executor.scheduler import scheduler
 from cppmakelib.system.all         import system
@@ -5,14 +6,15 @@ from cppmakelib.unit.binary        import Binary
 from cppmakelib.unit.dynamic       import Dynamic
 from cppmakelib.unit.executable    import Executable
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, syncable
-from cppmakelib.utility.filesystem import iterate_dir, path, replace_file_suffix
+from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
+from cppmakelib.utility.filesystem import iterate_dir, normal_path, path, replace_file_suffix
 import typing
 if typing.TYPE_CHECKING:
     from cppmakelib.unit.module import Module
     from cppmakelib.unit.source import Source
 
 class Object(Binary):
+    def           __new__    (cls,  file: path, from_code: Module | Source) -> Object    : ...
     def           __init__   (self, file: path, from_code: Module | Source) -> None      : ...
     def             share    (self)                                         -> Dynamic   : ...
     async def async_share    (self)                                         -> Dynamic   : ...
@@ -22,20 +24,22 @@ class Object(Binary):
     async def async_link     (self)                                         -> Executable: ...
     def             is_linked(self)                                         -> bool      : ...
     async def async_is_linked(self)                                         -> bool      : ...
+    from_code      : Module | Source
     dynamic_file   : path
     executable_file: path
-    from_code      : Module | Source
     lib_objects    : list[Object]
     
 
 
 @member(Object)
+@unique_in(context.package)
+@pre(normal_path)
 def __init__(self: Object, file: path, from_code: Module | Source) -> None:
     super(Object, self).__init__(file)
+    self.from_code       = from_code
     self.dynamic_file    = replace_file_suffix(self.file, system.dynamic_suffix)
     self.executable_file = replace_file_suffix(self.file, system.executable_suffix)
-    self.from_code       = from_code
-    self.lib_objects     = recursive_collect(node=self.from_code, next=lambda code: code.import_modules, collect=lambda code: Object(code.object_file, code))
+    self.lib_objects     = [Object(module.object_file, from_code=module) for module in self.from_code.import_modules]
 
 @member(Object)
 @syncable

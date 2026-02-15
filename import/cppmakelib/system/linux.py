@@ -6,9 +6,9 @@ import sys
 class Linux:
     def __init__(self) -> None: ...
     executable_suffix: str             = ''
-    object_suffix    : str             = '.o'
-    static_suffix    : str             = '.a'
-    dynamic_suffix   : str             = '.so'
+    object_suffix    : str             = 'o'
+    static_suffix    : str             = 'a'
+    dynamic_suffix   : str             = 'so'
     compiler         : resolvable_path = 'g++'
     install_dir      : path            = '/usr'
 

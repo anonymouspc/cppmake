@@ -26,7 +26,8 @@ class Header(Code):
 
 @member(Header)
 @syncable
-@unique
+@unique_in(context.package)
+@pre(normal_path)
 async def __ainit__(self: Header, file: path) -> None:
     await super(Header, self).__ainit__(file)
     self.name            = relative_path(from_path=self.context_package.search_header_dir, to_path=self.file)

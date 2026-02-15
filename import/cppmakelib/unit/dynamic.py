@@ -8,7 +8,6 @@ class Dynamic(Binary):
     def __init__(self, file: path) -> None   : ...
 
 
-
 @member(Dynamic)
 @unique_in(context.package)
 @pre(normal_path)

@@ -3,7 +3,7 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable, unique_on
-from cppmakelib.utility.filesystem import create_dir, exist_file, get_file_name, iterate_dir, join_path, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file
+from cppmakelib.utility.filesystem import get_file_name, is_file, iterate_dir, join_path, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file, try_create_dir
 from cppmakelib.utility.version    import Version
 import re
 
@@ -22,10 +22,10 @@ class Gcc:
     async def async_share     (self, object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
     def             link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
     async def async_link      (self, object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                                                     -> None: ...
-    preprocessed_suffix: str = '.ipp'
-    preparsed_suffix   : str = '.gch'
-    precompiled_suffix : str = '.gcm'  
-    diagnostic_suffix  : str = '.sarif'
+    preprocessed_suffix: str = 'ipp'
+    preparsed_suffix   : str = 'gch'
+    precompiled_suffix : str = 'gcm'  
+    diagnostic_suffix  : str = 'sarif'
     file               : resolvable_path
     version            : Version
     compile_flags      : list[str]
@@ -76,7 +76,7 @@ async def async_preprocess(
     define_macros    : dict[str, str] = {}, 
     include_dirs     : list[path]     = []
 ) -> None:
-    create_dir(parent_dir(preprocessed_file))
+    try_create_dir(parent_dir(preprocessed_file))
     await async_run(
         file=self.file,
         args=[
@@ -100,8 +100,8 @@ async def async_preparse(
     include_dirs   : list[path]     = [],
     diagnostic_file: path | None    = None
 ) -> None:
-    create_dir(parent_dir(preparsed_file))
-    create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
+    try_create_dir(parent_dir(preparsed_file))
+    try_create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
     await async_run(
         file=self.file,
         args=[
@@ -128,9 +128,9 @@ async def async_precompile(
     include_dirs    : list[path]     = [], 
     diagnostic_file : path | None    = None
 ) -> None:
-    create_dir(parent_dir(precompiled_file))
-    create_dir(parent_dir(object_file))
-    create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
+    try_create_dir(parent_dir(precompiled_file))
+    try_create_dir(parent_dir(object_file))
+    try_create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
     await async_run(
         file=self.file,
         args=[
@@ -157,8 +157,8 @@ async def async_compile(
     include_dirs   : list[path]     = [], 
     diagnostic_file: path | None = None
 ) -> None:
-    create_dir(parent_dir(object_file))
-    create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
+    try_create_dir(parent_dir(object_file))
+    try_create_dir(parent_dir(diagnostic_file)) if diagnostic_file is not None else None
     await async_run(
         file=self.file,
         args=[
@@ -182,7 +182,7 @@ async def async_link(
     link_flags     : list[str]  = [], 
     lib_files      : list[path] = []
 ) -> None:
-    create_dir(parent_dir(executable_file))
+    try_create_dir(parent_dir(executable_file))
     await async_run(
         file=self.file,
         args=[
@@ -233,7 +233,7 @@ async def _async_get_stdlib_module_file(self: Gcc) -> path:
     search_dirs  = [path(search_dir.strip())                for search_dir in search_dirs.group(1).splitlines()]
     search_files = [join_path(search_dir, 'bits', 'std.cc') for search_dir in search_dirs]
     for search_file in search_files:
-        if exist_file(search_file):
+        if is_file(search_file):
             return normal_path(search_file)
     else:
         raise ConfigError(f'libstdc++ module_file is not found (with search_files = {search_files})')

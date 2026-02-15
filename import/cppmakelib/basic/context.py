@@ -17,6 +17,7 @@ class Context:
         _new_package: Package
         _old_to_new : path
         _new_to_old : path  
+    _history: set[Package] = set()
 
 
 context: Context
@@ -29,6 +30,7 @@ def __init__(self: Context, package: Package) -> None:
 
 @member(Context)
 def switch(self: Context, package: Package) -> typing.ContextManager[None]:
+    self._history.add(package)
     return Context._ContextManager(self, package)
 
 @member(Context._ContextManager)
@@ -43,8 +45,8 @@ def __enter__(self: Context._ContextManager) -> None:
     self._old_to_new = relative_path(from_path=self._old_package.dir, to_path=self._new_package.dir)
     self._new_to_old = relative_path(from_path=self._new_package.dir, to_path=self._old_package.dir)
     change_current_dir(self._old_to_new)
-    for package in Package._unique.values():
-        for key, value in vars(package):
+    for package in self._context._history:
+        for key, value in vars(package).items():
             if key.endswith('dir') or key.endswith('file'):
                 setattr(package, key, normal_path(join_path(self._new_to_old, value))) 
 
@@ -52,8 +54,8 @@ def __enter__(self: Context._ContextManager) -> None:
 def __exit__(self: Context._ContextManager, *args: typing.Any, **kwargs: typing.Any) -> None:
     self._context.package = self._old_package
     change_current_dir(self._new_to_old)
-    for package in Package._unique.values():
-        for key, value in vars(package):
+    for package in self._context._history:
+        for key, value in vars(package).items():
             if key.endswith('dir') or key.endswith('file'):
                 setattr(package, key, normal_path(join_path(self._old_to_new, value)))
 

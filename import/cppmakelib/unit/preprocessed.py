@@ -1,5 +1,16 @@
-from cppmakelib.unit.code          import Code
-from cppmakelib.utility.filesystem import path
+from cppmakelib.basic.context      import context
+from cppmakelib.unit.binary        import Binary
+from cppmakelib.utility.decorator  import member, pre, unique_in
+from cppmakelib.utility.filesystem import normal_path, path
 
-class Preprocessed(Code):
-    pass
+class Preprocessed(Binary): # `Preprocessed` is phycially `Code` but logically `Binary`
+    def __new__ (cls,  file: path) -> Preprocessed: ...
+    def __init__(self, file: path) -> None        : ...
+
+
+
+@member(Preprocessed)
+@unique_in(context.package)
+@pre(normal_path)
+def __init__(self: Preprocessed, file: path) -> None:
+    super(Preprocessed, self).__init__(file)

@@ -4,7 +4,7 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable, unique_on
-from cppmakelib.utility.filesystem import create_dir, exist_file, join_path, normal_path, parent_dir, path, resolve_file, resolvable_path
+from cppmakelib.utility.filesystem import is_file, join_path, normal_path, parent_dir, path, resolve_file, resolvable_path, try_create_dir
 from cppmakelib.utility.version    import Version
 
 class Clang(Gcc):
@@ -16,8 +16,8 @@ class Clang(Gcc):
     async def async_preparse  (self, header_file: path, preparsed_file  : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [],                                diagnostic_file: path | None = None) -> None: ...
     def             compile   (self, source_file: path, object_file     : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
     async def async_compile   (self, source_file: path, object_file     : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = [], diagnostic_file: path | None = None) -> None: ...
-    preparsed_suffix   : str = '.pch'
-    precompiled_suffix : str = '.pcm'
+    preparsed_suffix   : str = 'pch'
+    precompiled_suffix : str = 'pcm'
     file               : resolvable_path
     version            : Version
     compile_flags      : list[str]
@@ -70,7 +70,7 @@ async def async_preparse(
     include_dirs   : list[path]     = [],
     diagnostic_file: path | None    = None
 ) -> None:
-    create_dir(parent_dir(preparsed_file))
+    try_create_dir(parent_dir(preparsed_file))
     await async_run(
         file=self.file,
         args=[
@@ -97,8 +97,8 @@ async def async_precompile(
     include_dirs    : list[path]     = [], 
     diagnostic_file : path | None    = None
 ) -> None:
-    create_dir(parent_dir(precompiled_file))
-    create_dir(parent_dir(object_file))
+    try_create_dir(parent_dir(precompiled_file))
+    try_create_dir(parent_dir(object_file))
     await async_run(
         file=self.file,
         args=[
@@ -132,7 +132,7 @@ async def async_compile(
     include_dirs   : list[path]     = [], 
     diagnostic_file: path | None    = None
 ) -> None:
-    create_dir(parent_dir(object_file))
+    try_create_dir(parent_dir(object_file))
     await async_run(
         file=self.file,
         args=[
@@ -189,8 +189,8 @@ async def _async_get_stdlib_module_file(self: Clang) -> path:
             return_stdout=True,
         )
         resource_dir = path(resource_dir.strip())
-        search_file = join_path(parent_dir(parent_dir(parent_dir(resource_dir))), 'share', 'libc++', 'v1', 'std.cppm')
-        if exist_file(search_file): 
+        search_file = join_path(resource_dir, parent_dir(), parent_dir(), parent_dir(), 'share', 'libc++', 'v1', 'std.cppm')
+        if is_file(search_file): 
             return normal_path(search_file)
         else:
             raise ConfigError(f'libc++ module_file is not found (with search_file = {search_file})')

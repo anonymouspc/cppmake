@@ -1,10 +1,9 @@
 from cppmakelib.basic.config       import config
 from cppmakelib.logger.unit_status import UnitStatusLogger
 from cppmakelib.utility.decorator  import member, once, unique
-from cppmakelib.utility.filesystem import join_path, path
+from cppmakelib.utility.filesystem import current_dir, join_path, path
 from cppmakelib.utility.import_    import import_module
 import types
-import typing
 
 class Package:
     def __new__  (cls,  name: str) -> Package: ...
@@ -40,8 +39,6 @@ class Package:
     cppmake            : types.ModuleType | None
     # ========
 
-    _unique: dict[str, Package] = {}
-
 class MainPackage(Package):
     def           __new__  (cls)  -> MainPackage: ...
     def           __init__ (self) -> None       : ...
@@ -51,7 +48,7 @@ class MainPackage(Package):
     async def async_install(self) -> None       : ...
     # ========
     name               : str  = 'main'
-    dir                : path = '.'
+    dir                : path = ''
     # ========
     include_dir        : path # redefinable in cppmake.py
     import_dir         : path # redefinable in cppmake.py
@@ -131,7 +128,7 @@ def __new__(cls: type[MainPackage]) -> MainPackage:
 @member(MainPackage)
 def __init__(self: MainPackage) -> None:
     self.name                = 'main'
-    self.dir                 = ''
+    self.dir                 = current_dir()
     self.include_dir         = 'include'
     self.import_dir          = 'import'
     self.pkg_dir             = 'pkg'

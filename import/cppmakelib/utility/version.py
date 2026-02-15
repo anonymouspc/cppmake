@@ -15,6 +15,7 @@ class Version:
     def __lt__  (self, other_version: Version | int | float | typing.Any) -> bool   : ...
     @staticmethod
     def parse   (pattern: str, string: str)                               -> Version: ...
+    sep        : str = '.'
     subversions: list[int]
 
 
@@ -25,7 +26,7 @@ def __init__(self: Version, subversions: list[int]) -> None:
 
 @member(Version)
 def __str__(self: Version) -> str:
-    return '.'.join([str(subversion) for subversion in self.subversions])
+    return Version.sep.join([str(subversion) for subversion in self.subversions])
 
 @member(Version)
 def __eq__(self: Version, other: Version | typing.Any) -> bool:

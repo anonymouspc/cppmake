@@ -6,9 +6,9 @@ import sys
 class Macos:
     def __init__(self) -> None: ...
     executable_suffix: str             = ''
-    object_suffix    : str             = '.o'
-    static_suffix    : str             = '.a'
-    dynamic_suffix   : str             = '.dylib'
+    object_suffix    : str             = 'o'
+    static_suffix    : str             = 'a'
+    dynamic_suffix   : str             = 'dylib'
     compiler         : resolvable_path = 'clang++'
     install_dir      : path            = '/usr'
 
