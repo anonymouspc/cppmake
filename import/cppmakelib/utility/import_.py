@@ -1,3 +1,4 @@
+from cppmakelib.utility.decorator  import implement
 from cppmakelib.utility.filesystem import path
 import importlib.util
 import types
@@ -7,6 +8,7 @@ def import_module(file: path, globals: dict[str, typing.Any] = {}) -> types.Modu
 
 
 
+@implement
 def import_module(file: path, globals: dict[str, typing.Any] = {}) -> types.ModuleType | None:
     try:
         spec = importlib.util.spec_from_file_location(name=file, location=file)

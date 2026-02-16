@@ -8,8 +8,7 @@ from cppmakelib.utility.decorator  import member, once, syncable, unique
 from cppmakelib.utility.filesystem import path, relative_path
 
 class Header(Code):
-    def           __new__       (cls: ..., file: path) -> Header   : ...
-    async def    __anew__       (cls: ..., file: path) -> Header   : ...
+    def           __new__       (cls: type, file: path) -> Header   : ...
     def           __init__      (self,     file: path) -> None     : ...
     async def    __ainit__      (self,     file: path) -> None     : ...
     def             preparse    (self)                 -> Preparsed: ...
@@ -27,13 +26,13 @@ class Header(Code):
 @member(Header)
 @syncable
 @unique_in(context.package)
-@pre(normal_path)
+@pre(1, normal_path)
 async def __ainit__(self: Header, file: path) -> None:
     await super(Header, self).__ainit__(file)
     self.name            = relative_path(from_path=self.context_package.search_header_dir, to_path=self.file)
     self.preparsed_file  = join_path(self.context_package.build_header_dir, self.name, compiler.preparsed_suffix)
     self.diagnostic_file = join_path(self.context_package.build_header_dir, self.name, compiler.diagnostic_suffix)
-    self.include_headers = await when_all([Header.__anew__(Header, file) for file in self.context_package.unit_status_logger.get_header_includes(header=self)])
+    self.include_headers = await when_all([Header.__anew__(Header, file) for file in self.context_package.unit_status_cacher.get_header_includes(header=self)])
 
 @member(Header)
 @syncable
@@ -51,7 +50,7 @@ async def async_preparse(self: Header) -> Preparsed:
                 include_dirs   =[self.context_package.build_header_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
                 diagnostic_file=self.diagnostic_file
             )
-        self.context_package.unit_status_logger.set_header_preparsed(header=self, result=True)
+        self.context_package.unit_status_cacher.set_header_preparsed(header=self, result=True)
     return Preparsed(self.preparsed_file)
 
 @member(Header)
@@ -60,4 +59,4 @@ async def async_preparse(self: Header) -> Preparsed:
 async def async_is_preparsed(self: Header) -> bool:
     return all(await when_all([header.async_is_preparsed() for header in self.include_headers])) and \
            await self.async_is_preparsed()                                                       and \
-           self.context_package.unit_status_logger.get_header_preparsed(header=self)
+           self.context_package.unit_status_cacher.get_header_preparsed(header=self)

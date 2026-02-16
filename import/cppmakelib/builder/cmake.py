@@ -3,24 +3,25 @@ from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import create_dir, parent_dir, path, resolvable_path, try_create_dir, try_remove_dir
+from cppmakelib.utility.decorator  import member, syncable, unique_on
+from cppmakelib.utility.filesystem import delete_dir, new_dir, parent_dir, path, resolvable_path, resolve_file
 from cppmakelib.utility.version    import Version
 
 class Cmake: 
-    def           __init__   (self, file: resolvable_path = 'cmake')                                                         -> None: ...
-    async def    __ainit__   (self, file: resolvable_path = 'cmake')                                                         -> None: ...
-    def             configure(self, cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
-    async def async_configure(self, cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None: ...
-    def             build    (self, build_dir: path)                                                                         -> None: ...
-    async def async_build    (self, build_dir: path)                                                                         -> None: ...
-    def             install  (self, build_dir: path, install_dir: path)                                                      -> None: ...
-    async def async_install  (self, build_dir: path, install_dir: path)                                                      -> None: ...
+    def           __new__    (cls : type[Cmake], file: resolvable_path = 'cmake')                                                         -> Cmake: ...
+    def           __init__   (self: Cmake,       file: resolvable_path = 'cmake')                                                         -> None : ...
+    async def    __ainit__   (self: Cmake,       file: resolvable_path = 'cmake')                                                         -> None : ...
+    def             configure(self: Cmake,       cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None : ...
+    async def async_configure(self: Cmake,       cmakelists_file: path, build_dir: path, build_flags: list[str], prefix_dirs: list[path]) -> None : ...
+    def             build    (self: Cmake,       build_dir: path)                                                                         -> None : ...
+    async def async_build    (self: Cmake,       build_dir: path)                                                                         -> None : ...
+    def             install  (self: Cmake,       build_dir: path, install_dir: path)                                                      -> None : ...
+    async def async_install  (self: Cmake,       build_dir: path, install_dir: path)                                                      -> None : ...
     file       : resolvable_path
     version    : Version
     build_flags: list[str]
 
-    async def _async_get_version(self) -> Version: ...
+    async def _async_get_version(self: Cmake) -> Version: ...
 
 cmake: Cmake
 
@@ -28,6 +29,7 @@ cmake: Cmake
 
 @member(Cmake)
 @syncable
+@unique_on(resolve_file)
 async def __ainit__(self: Cmake, file: resolvable_path = 'cmake') -> None:
     self.file        = file
     self.version     = await self._async_get_version()
@@ -47,7 +49,7 @@ async def async_configure(
     prefix_dirs    : list[path]
 ) -> None:
     try:
-        create_dir(build_dir)
+        new_dir(build_dir) # Must configure in a new empty dir.
         await async_run(
             file=self.file,
             args=[
@@ -58,7 +60,7 @@ async def async_configure(
             ]
         )
     except:
-        try_remove_dir(build_dir)
+        delete_dir(build_dir, not_exist_ok=True)
         raise
 
 @member(Cmake)
@@ -83,7 +85,7 @@ async def async_install(
     install_dir: path
 ) -> None:
     try:
-        try_create_dir(install_dir)
+        new_dir(install_dir, exist_ok=True)
         await async_run(
             file=self.file,
             args=[
@@ -93,7 +95,7 @@ async def async_install(
             ]
         )
     except:
-        try_remove_dir(install_dir)
+        delete_dir(install_dir, not_exist_ok=True)
         raise
 
 @member(Cmake)

@@ -1,3 +1,4 @@
+from cppmakelib.utility.decorator import implement
 import typing
 
 @typing.overload
@@ -7,16 +8,16 @@ def recursive_collect[T, U, R](node: U, next: typing.Callable[[U | T], list[T]],
 
 
 
-# Our goal is to make the caller more pretty (with the algorithm itself to be maybe dirty).
-# Feel free to overwrite the implemention when we need something new from it.
 
+
+@implement
 def recursive_collect[T, U, R](
     node   : U, 
     next   : typing.Callable[[U | T], list[T]], 
     collect: typing.Callable[[T], R | list[R] | None], 
     flatten: bool = False
 ) -> list[R]:
-   return _recursive_collect_impl_root(node=node, next=next, collect=collect, flatten=flatten)
+    return _recursive_collect_impl_root(node=node, next=next, collect=collect, flatten=flatten)
 
 def _recursive_collect_impl_root[T, U, R](
     node     : U,

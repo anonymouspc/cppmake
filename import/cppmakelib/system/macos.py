@@ -4,7 +4,7 @@ from cppmakelib.utility.filesystem import path, resolvable_path
 import sys
 
 class Macos:
-    def __init__(self) -> None: ...
+    def __init__(self: Macos) -> None: ...
     executable_suffix: str             = ''
     object_suffix    : str             = 'o'
     static_suffix    : str             = 'a'
@@ -12,7 +12,7 @@ class Macos:
     compiler         : resolvable_path = 'clang++'
     install_dir      : path            = '/usr'
 
-    def _check(self) -> None: ...
+    def _check(self: Macos) -> None: ...
 
 
 

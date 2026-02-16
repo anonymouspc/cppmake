@@ -1,14 +1,17 @@
+from cppmakelib.utility.decorator import implement
 import asyncio
 import threading
 import typing
 
-def sync_wait     [T](task :      typing.Awaitable[T] ) -> T      : ...
-def start_detached[T](task :      typing.Awaitable[T] ) -> None   : ...
-def when_all      [T](tasks: list[typing.Awaitable[T]]) -> list[T]: ...
-def when_any      [T](tasks: list[typing.Awaitable[T]]) -> T      : ...
+def       start_detached[T](task :      typing.Awaitable[T])                                   -> None   : ...
+def       sync_wait     [T](task :      typing.Awaitable[T])                                   -> T      : ...
+async def then          [T](value: T, then_func: typing.Callable[[T], typing.Awaitable[None]]) -> T: ...
+def       when_all      [T](tasks: list[typing.Awaitable[T]])                                  -> list[T]: ...
+def       when_any      [T](tasks: list[typing.Awaitable[T]])                                  -> T      : ...
 
 
 
+@implement
 def sync_wait[T](task: typing.Awaitable[T]) -> T:
     try:
         asyncio.get_running_loop()
@@ -36,7 +39,13 @@ def sync_wait[T](task: typing.Awaitable[T]) -> T:
             return value[0]
         else: 
             raise error
+        
+@implement
+async def then[T](value: T, then_func: typing.Callable[[T], typing.Awaitable[None]]) -> T:
+    await then_func(value)
+    return value
 
+@implement
 async def when_all[T](tasks: list[typing.Awaitable[T]]) -> list[T]:
     return await asyncio.gather(*tasks)
 

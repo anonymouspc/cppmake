@@ -4,13 +4,13 @@ from cppmakelib.utility.decorator  import member, pre, unique_in
 from cppmakelib.utility.filesystem import normal_path, path
 
 class Precompiled(Binary):
-    def __new__ (cls,  file: path) -> Precompiled: ...
-    def __init__(self, file: path) -> None       : ...
+    def __new__ (cls : type[Precompiled], file: path) -> Precompiled: ...
+    def __init__(self: Precompiled,       file: path) -> None       : ...
 
 
 
 @member(Precompiled)
 @unique_in(context.package)
-@pre(normal_path)
+@pre(1, normal_path)
 def __init__(self: Precompiled, file: path) -> None:
     super(Precompiled, self).__init__(file)

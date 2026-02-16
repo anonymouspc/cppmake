@@ -4,7 +4,7 @@ from cppmakelib.utility.filesystem import path, resolvable_path
 import sys
 
 class Windows:
-    def __init__(self) -> None: ...
+    def __init__(self: Windows) -> None: ...
     executable_suffix: str             = 'exe'
     object_suffix    : str             = 'obj'
     static_suffix    : str             = 'lib'
@@ -12,7 +12,7 @@ class Windows:
     compiler         : resolvable_path = 'cl.exe'
     install_dir      : path            = 'C:\\Program Files'
 
-    def _check(self) -> None: ...
+    def _check(self: Windows) -> None: ...
 
 
 

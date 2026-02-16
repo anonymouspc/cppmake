@@ -1,13 +1,10 @@
 {
     "python.analysis.typeCheckingMode": "strict",
     "python.analysis.diagnosticSeverityOverrides": {
-        "reportInvalidTypeVarUse": "none",
-        "reportNoOverloadImplementation": "none",
-        "reportOverlappingOverload": "none",
-        "reportPrivateUsage": "none",
-        "reportRedeclaration": "none",
-        "reportSelfClsParameterName": "none",
-        "reportUnusedFunction": "none",
+        "reportNoOverloadImplementation": "none", // `run()` declared but implicitly implemented with `async_run()`, and `_MultiFunc.__getitem__` is not in-class implemented.
+        "reportPrivateUsage": "none", // `@member` class functions will use private functions.
+        "reportRedeclaration": "none", // `@implement` global functions will redeclare functions.
+        "reportUnusedFunction": "none", // `@member` private class functions will be marked as unused global functions.
 
         "reportUnusedImport": "warning",
         "reportUnusedVariable": "warning"

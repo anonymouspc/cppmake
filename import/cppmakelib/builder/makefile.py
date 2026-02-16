@@ -3,24 +3,25 @@ from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable
-from cppmakelib.utility.filesystem import absolute_path, create_dir, path, resolvable_path, try_create_dir, try_remove_dir
+from cppmakelib.utility.decorator  import member, syncable, unique_on
+from cppmakelib.utility.filesystem import absolute_path, delete_dir, new_dir, path, resolvable_path, resolve_file
 from cppmakelib.utility.version    import Version
 
 class Makefile:
-    def           __init__   (self, file: resolvable_path = 'make')                                -> None: ...
-    async def    __ainit__   (self, file: resolvable_path = 'make')                                -> None: ...
-    def             configure(self, configure_file: path, build_dir: path, build_flags: list[str]) -> None: ...
-    async def async_configure(self, configure_file: path, build_dir: path, build_flags: list[str]) -> None: ...
-    def             build    (self, build_dir: path)                                               -> None: ...
-    async def async_build    (self, build_dir: path)                                               -> None: ...
-    def             install  (self, build_dir: path, install_dir: path)                            -> None: ...
-    async def async_install  (self, build_dir: path, install_dir: path)                            -> None: ...
+    def           __new__    (cls : type[Makefile], file: resolvable_path = 'make')                                -> Makefile: ...
+    def           __init__   (self: Makefile,       file: resolvable_path = 'make')                                -> None    : ...
+    async def    __ainit__   (self: Makefile,       file: resolvable_path = 'make')                                -> None    : ...
+    def             configure(self: Makefile,       configure_file: path, build_dir: path, build_flags: list[str]) -> None    : ...
+    async def async_configure(self: Makefile,       configure_file: path, build_dir: path, build_flags: list[str]) -> None    : ...
+    def             build    (self: Makefile,       build_dir: path)                                               -> None    : ...
+    async def async_build    (self: Makefile,       build_dir: path)                                               -> None    : ...
+    def             install  (self: Makefile,       build_dir: path, install_dir: path)                            -> None    : ...
+    async def async_install  (self: Makefile,       build_dir: path, install_dir: path)                            -> None    : ...
     file       : resolvable_path
     version    : Version
     build_flags: list[str]
 
-    async def _async_get_version(self) -> Version: ...
+    async def _async_get_version(self: Makefile) -> Version: ...
 
 makefile: Makefile
 
@@ -28,6 +29,7 @@ makefile: Makefile
 
 @member(Makefile)
 @syncable
+@unique_on(resolve_file)
 async def __ainit__(self: Makefile, file: path = 'make') -> None:
     self.file        = file
     self.version     = await self._async_get_version()
@@ -45,7 +47,7 @@ async def async_configure(
     build_flags   : list[str], 
 ) -> None:
     try:
-        create_dir(build_dir)
+        new_dir(build_dir) # Must configure in a new empty dir.
         await async_run(
             file=configure_file,
             args=[
@@ -54,7 +56,7 @@ async def async_configure(
             cwd=build_dir
         )
     except:
-        try_remove_dir(build_dir)
+        delete_dir(build_dir, not_exist_ok=True)
         raise
 
 @member(Makefile)
@@ -79,7 +81,7 @@ async def async_install(
     install_dir: path
 ) -> None:
     try:
-        try_create_dir(install_dir)
+        new_dir(install_dir, exist_ok=True)
         await async_run(
             file=self.file,
             args=[
@@ -90,7 +92,7 @@ async def async_install(
             ]
         )
     except:
-        try_remove_dir(install_dir)
+        delete_dir(install_dir, not_exist_ok=True)
         raise
 
 @member(Makefile)

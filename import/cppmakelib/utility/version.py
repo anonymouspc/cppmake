@@ -9,12 +9,12 @@ class Version:
         pattern : str
         string  : str
         position: int
-    def __init__(self, subversions: list[int])                            -> None   : ...
-    def __str__ (self)                                                    -> str    : ...
-    def __eq__  (self, other_version: Version | typing.Any)               -> bool   : ...
-    def __lt__  (self, other_version: Version | int | float | typing.Any) -> bool   : ...
+    def __init__(self: Version, subversions: list[int])                    -> None   : ...
+    def __str__ (self: Version)                                            -> str    : ...
+    def __eq__  (self: Version, right: Version | typing.Any)               -> bool   : ...
+    def __lt__  (self: Version, right: Version | int | float | typing.Any) -> bool   : ...
     @staticmethod
-    def parse   (pattern: str, string: str)                               -> Version: ...
+    def parse   (pattern: str, string: str)                                -> Version: ...
     sep        : str = '.'
     subversions: list[int]
 
@@ -29,26 +29,26 @@ def __str__(self: Version) -> str:
     return Version.sep.join([str(subversion) for subversion in self.subversions])
 
 @member(Version)
-def __eq__(self: Version, other: Version | typing.Any) -> bool:
-    if isinstance(other, Version):
-        return self.subversions == other.subversions
+def __eq__(self: Version, right: Version | typing.Any) -> bool:
+    if isinstance(right, Version):
+        return self.subversions == right.subversions
     else:
         return NotImplemented
     
 @member(Version)
-def __lt__(self: Version, other: Version | int | float | typing.Any) -> bool:
-    if isinstance(other, Version):
-        return self.subversions < other.subversions
-    elif isinstance(other, int):
-        return self.subversions[0] < other
-    elif isinstance(other, float):
-        return self.subversions[0] <  int(other) or \
-               self.subversions[0] == int(other) and self.subversions[1] < int(str(other).partition('.')[2])
+def __lt__(self: Version, right: Version | int | float | typing.Any) -> bool:
+    if isinstance(right, Version):
+        return self.subversions < right.subversions
+    elif isinstance(right, int):
+        return self.subversions[0] < right
+    elif isinstance(right, float):
+        return self.subversions[0] <  int(right) or \
+               self.subversions[0] == int(right) and self.subversions[1] < int(str(right).partition('.')[2])
     else:
         return NotImplemented
     
 @member(Version)
-def parse(pattern: str, string: str):
+def parse(pattern: str, string: str) -> Version:
     versions = re.findall(pattern=pattern, string=string)
     if len(versions) == 0:
         raise Version.ParseError(f'failed to parse version (with pattern = {pattern}, string = {string})')

@@ -14,17 +14,17 @@ if typing.TYPE_CHECKING:
     from cppmakelib.unit.source import Source
 
 class Object(Binary):
-    def           __new__    (cls,  file: path, from_code: Module | Source) -> Object    : ...
-    def           __init__   (self, file: path, from_code: Module | Source) -> None      : ...
-    def             share    (self)                                         -> Dynamic   : ...
-    async def async_share    (self)                                         -> Dynamic   : ...
-    def             is_shared(self)                                         -> bool      : ...
-    async def async_is_shared(self)                                         -> bool      : ...
-    def             link     (self)                                         -> Executable: ...
-    async def async_link     (self)                                         -> Executable: ...
-    def             is_linked(self)                                         -> bool      : ...
-    async def async_is_linked(self)                                         -> bool      : ...
-    from_code      : Module | Source
+    def           __new__    (cls : type[Object], file: path, from_code: Module | Source) -> Object    : ...
+    def           __init__   (self: Object,       file: path, from_code: Module | Source) -> None      : ...
+    def             share    (self: Object)                                               -> Dynamic   : ...
+    async def async_share    (self)                                                       -> Dynamic   : ...
+    def             is_shared(self)                                                       -> bool      : ...
+    async def async_is_shared(self)                                                       -> bool      : ...
+    def             link     (self)                                                       -> Executable: ...
+    async def async_link     (self)                                                       -> Executable: ...
+    def             is_linked(self)                                                       -> bool      : ...
+    async def async_is_linked(self)                                                       -> bool      : ...
+    from_code      : Module | Source 
     dynamic_file   : path
     executable_file: path
     lib_objects    : list[Object]
@@ -33,7 +33,7 @@ class Object(Binary):
 
 @member(Object)
 @unique_in(context.package)
-@pre(normal_path)
+@pre(1, normal_path)
 def __init__(self: Object, file: path, from_code: Module | Source) -> None:
     super(Object, self).__init__(file)
     self.from_code       = from_code
@@ -55,14 +55,14 @@ async def async_share(self: Object) -> Dynamic:
                 lib_files   =recursive_collect(self,                 next=lambda object : object.lib_objects,       collect=lambda object : object.file) +
                              recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: [file for file in iterate_dir(package.install_lib_dir)], flatten=True)
             )
-        self.context_package.unit_status_logger.set_object_shared(object=self, shared=True)
+        self.context_package.unit_status_cacher.set_object_shared(object=self, shared=True)
     return Dynamic(self.dynamic_file)
 
 @member(Object)
 @syncable
 @once
 async def async_is_shared(self: Object) -> bool:
-    return self.context_package.unit_status_logger.get_object_shared(object=self)
+    return self.context_package.unit_status_cacher.get_object_shared(object=self)
 
 @member(Object)
 @syncable
@@ -78,11 +78,11 @@ async def async_link(self: Object) -> Executable:
                 lib_files      =recursive_collect(self,                 next=lambda object : object.lib_objects,       collect=lambda object : object.file) +
                                 recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: [file for file in iterate_dir(package.install_lib_dir)], flatten=True)
             )
-        self.context_package.unit_status_logger.set_object_linked(object=self, linked=True)
+        self.context_package.unit_status_cacher.set_object_linked(object=self, linked=True)
     return Executable(self.executable_file)
 
 @member(Object)
 @syncable
 @once
 async def async_is_linked(self: Object) -> bool:
-    return self.context_package.unit_status_logger.get_object_linked(object=self)
+    return self.context_package.unit_status_cacher.get_object_linked(object=self)

@@ -1,13 +1,13 @@
 from cppmakelib.system.all         import system
 from cppmakelib.utility.decorator  import member
-from cppmakelib.utility.filesystem import current_dir, path
+from cppmakelib.utility.filesystem import change_current_dir, current_dir, path
 import argparse
 import os
 import typing
 
 class Config(argparse.Namespace):
-    def __init__    (self)                            -> None: ...
-    def add_argument(self, *args: ..., **kwargs: ...) -> None: ...
+    def __init__    (self: Config)                            -> None: ...
+    def add_argument(self: Config, *args: ..., **kwargs: ...) -> None: ...
     # ========
     project    : path
     target     : str
@@ -51,5 +51,4 @@ def add_argument(self: Config, *args: ..., **kwargs: ...) -> None:
 
 config = Config()
 
-os.chdir(config.project)
-os.environ['LANG'] = 'C'
+change_current_dir(config.project)

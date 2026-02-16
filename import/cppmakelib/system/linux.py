@@ -4,7 +4,7 @@ from cppmakelib.utility.filesystem import path, resolvable_path
 import sys
 
 class Linux:
-    def __init__(self) -> None: ...
+    def __init__(self: Linux) -> None: ...
     executable_suffix: str             = ''
     object_suffix    : str             = 'o'
     static_suffix    : str             = 'a'
@@ -12,7 +12,7 @@ class Linux:
     compiler         : resolvable_path = 'g++'
     install_dir      : path            = '/usr'
 
-    def _check(self) -> None: ...
+    def _check(self: Linux) -> None: ...
 
 
 
