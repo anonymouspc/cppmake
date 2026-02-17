@@ -1,10 +1,11 @@
-from cppmakelib.basic.config       import config
-from cppmakelib.error.config       import ConfigError
-from cppmakelib.error.subprocess   import SubprocessError
-from cppmakelib.executor.run       import async_run
-from cppmakelib.utility.decorator  import member, syncable, unique_on
-from cppmakelib.utility.filesystem import get_file_name, is_file, iterate_dir, join_path, new_dir, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file
-from cppmakelib.utility.version    import Version
+from cppmakelib.basic.config        import config
+from cppmakelib.error.config        import ConfigError
+from cppmakelib.error.subprocess    import SubprocessError
+from cppmakelib.executor.run        import async_run
+from cppmakelib.utility.decorator   import member, syncable, unique_on
+from cppmakelib.utility.environment import append_current_env
+from cppmakelib.utility.filesystem  import get_file_name, is_file, iterate_dir, join_path, new_dir, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file
+from cppmakelib.utility.version     import Version
 import re
 
 class Gcc:
@@ -127,7 +128,7 @@ async def async_precompile(
     include_dirs    : list[path]     = []
 ) -> None:
     new_dir(parent_dir(precompiled_file), exist_ok=True)
-    new_dir(parent_dir(object_file))
+    new_dir(parent_dir(object_file),      exist_ok=True)
     await async_run(
         file=self.file,
         args=[
@@ -135,7 +136,7 @@ async def async_precompile(
             *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
             f'-fmodule-mapper={self._write_mapper(target_file=precompiled_file, import_files=[precompiled_file],  import_dirs=import_dirs)}',
             *[f'-I{include_dir}' for include_dir in include_dirs],
-            f'-fdiagnostics-add-output=sarif:file={replace_file_suffix(precompiled_file, 'sarif')}'
+            f'-fdiagnostics-add-output=sarif:file={replace_file_suffix(precompiled_file, 'sarif')}',
             '-c', '-x', 'c++', module_file,
             '-o', object_file
         ],
@@ -161,7 +162,7 @@ async def async_compile(
             *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
             f'-fmodule-mapper={self._write_mapper(target_file=object_file, import_dirs=import_dirs)}',
             *[f'-I{include_dir}' for include_dir in include_dirs],
-            f'-fdiagnostics-add-output=sarif:file={replace_file_suffix(object_file, 'sarif')}'
+            f'-fdiagnostics-add-output=sarif:file={replace_file_suffix(object_file, 'sarif')}',
             '-c', '-x', 'c++', source_file,
             '-o', object_file
         ],
@@ -215,7 +216,7 @@ async def _async_get_stdlib_module_file(self: Gcc) -> path:
             '-E', '-x', 'c++', '-',
             '-v' 
         ],
-        env=current_env.copy().update({'LANG': 'C'}),
+        env=append_current_env({'LANG': 'C'}),
         print_stderr=config.verbose,
         return_stderr=True
     )

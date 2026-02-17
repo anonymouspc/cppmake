@@ -1,13 +1,13 @@
 from cppmakelib.package.basic      import Package
-from cppmakelib.package.main       import main_package
+from cppmakelib.package.main       import MainPackage
 from cppmakelib.utility.decorator  import member
 from cppmakelib.utility.filesystem import change_current_dir, join_path, normal_path, path, relative_path
 import typing
 
 class Context:
-    def __init__(self: Context, package: Package) -> None                       : ...
-    def   switch(self: Context, package: Package) -> typing.ContextManager[None]: ...
-    package: Package
+    def default(self: Context)                   -> typing.ContextManager[None]: ...
+    def switch (self: Context, package: Package) -> typing.ContextManager[None]: ...
+    package: Package = MainPackage.__new__(MainPackage) # Only `__new__` and do not `__init__`, due to initialize cycle `main_package` -> `import_module('cppmake.py')` -> `Package('boost')` -> `context.default()` -> `main_package`.
 
     class _ContextManager:
         def __init__ (self: Context._ContextManager, context: Context, package: Package)      -> None: ...
@@ -25,8 +25,9 @@ context: Context
 
 
 @member(Context)
-def __init__(self: Context, package: Package) -> None:
-    self.package = package
+def default(self: Context) -> typing.ContextManager[None]:
+    self._history.add(MainPackage.__new__(MainPackage))
+    return Context._ContextManager(self, MainPackage.__new__(MainPackage))
 
 @member(Context)
 def switch(self: Context, package: Package) -> typing.ContextManager[None]:
@@ -59,4 +60,4 @@ def __exit__(self: Context._ContextManager, *args: typing.Any, **kwargs: typing.
             if key.endswith('dir') or key.endswith('file'):
                 setattr(package, key, normal_path(join_path(self._old_to_new, value)))
 
-context = Context(main_package)
+context = Context()

@@ -23,13 +23,13 @@ class UnitStatusCacher:
     # ========
     async def async_get_module_name       (self: UnitStatusCacher, module: Module)                            -> str       : ...
     def             set_module_name       (self: UnitStatusCacher, module: Module,  name        : str)        -> None      : ...
-    async def async_get_module_imports    (self: UnitStatusCacher, module: Module)                            -> list[path]: ...
-    async def async_set_module_imports    (self: UnitStatusCacher, module: Module,  imports     : list[path]) -> None      : ...
+    async def async_get_module_imports    (self: UnitStatusCacher, module: Module)                            -> list[str]: ...
+    def             set_module_imports    (self: UnitStatusCacher, module: Module,  imports     : list[str])  -> None      : ...
     def             get_module_precompiled(self: UnitStatusCacher, module: Module)                            -> bool      : ...
     def             set_module_precompiled(self: UnitStatusCacher, module: Module,  precompiled : bool)       -> None      : ...
     # ========
-    async def async_get_source_imports    (self: UnitStatusCacher, source: Source)                            -> list[path]: ...
-    async def async_set_source_imports    (self: UnitStatusCacher, source: Source,  imports     : list[path]) -> None      : ...
+    async def async_get_source_imports    (self: UnitStatusCacher, source: Source)                            -> list[str]: ...
+    def             set_source_imports    (self: UnitStatusCacher, source: Source,  imports     : list[str])  -> None      : ...
     def             get_source_compiled   (self: UnitStatusCacher, source: Source)                            -> bool      : ...
     def             set_source_compiled   (self: UnitStatusCacher, source: Source,  compiled    : bool)       -> None      : ...
     # ========
@@ -39,7 +39,7 @@ class UnitStatusCacher:
     def             set_object_linked     (self: UnitStatusCacher, object: Object,  linked      : bool)       -> None      : ...
     # ========
 
-    class _StatusNotFoundError(KeyError):
+    class _StatusNeedsUpdateError(KeyError):
         pass
     def _get    (self: UnitStatusCacher, entry: list[str], check: dict[str, typing.Any], result: str)        -> typing.Any: ...
     def _set    (self: UnitStatusCacher, entry: list[str], check: dict[str, typing.Any], result: typing.Any) -> None      : ...
@@ -68,7 +68,7 @@ def __del__(self: UnitStatusCacher) -> None:
 def get_code_preprocessed(self: UnitStatusCacher, code: Code) -> bool:
     try:
         return self._get(entry=['code', 'preprocessed', code.file], check={'code': code, 'compiler': compiler}, result='preprocessed')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         return False
 
 @member(UnitStatusCacher)
@@ -79,7 +79,7 @@ def set_code_preprocessed(self: UnitStatusCacher, code: Code, preprocessed: bool
 async def async_get_module_name(self: UnitStatusCacher, module: Module) -> str:
     try:
         name = self._get(entry=['module', 'name', module.file], check={'module': module, 'compiler': compiler}, result='name')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         await module.async_preprocess()
         names = re.findall(
             pattern=r'^\s*(?:export\s+)?module\s+(\w+(?:[\.:]\w+)*)\s*;\s*$',
@@ -87,7 +87,7 @@ async def async_get_module_name(self: UnitStatusCacher, module: Module) -> str:
             flags  =re.MULTILINE
         )
         if len(names) == 0:
-            raise LogicError(f'module {module.file} does not have a export statement')
+            raise LogicError(f'module {module.file} does not have an export name')
         elif len(names) == 1:
             name = names[0]
             self.set_module_name(module=module, name=name)
@@ -105,7 +105,7 @@ def set_module_name(self: UnitStatusCacher, module: Module, name: str) -> None:
 async def async_get_module_imports(self: UnitStatusCacher, module: Module) -> list[path]:
     try:
         imports = self._get(entry=['module', 'imports', module.file], check={'module':  module, 'compiler': compiler}, result='imports')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         await module.async_preprocess()
         imports = re.findall(
             pattern=r'^\s*(?:export\s+)?import\s+(\w+(?:[\.:]\w+)*)\s*;\s*$',
@@ -113,18 +113,18 @@ async def async_get_module_imports(self: UnitStatusCacher, module: Module) -> li
             flags  =re.MULTILINE
         )
         imports = [join_path(module.context_package.import_dir, add_file_suffix(join_path(*re.split(pattern=r'[.:]', string=import_)), 'cpp')) for import_ in imports]
-        await self.async_set_module_imports(module=module, imports=imports)
+        self.set_module_imports(module=module, imports=imports)
     return imports
 
 @member(UnitStatusCacher)
-async def async_set_module_imports(self: UnitStatusCacher, module: Module, imports: list[path]) -> None:
+def set_module_imports(self: UnitStatusCacher, module: Module, imports: list[path]) -> None:
     self._set(entry=['module', 'imports', module.file], check={'module': module, 'compiler': compiler}, result={'imports': imports})
 
 @member(UnitStatusCacher)
 def get_module_precompiled(self: UnitStatusCacher, module: Module) -> bool:
     try:
         return self._get(entry=['module', 'precompiled', module.file], check={'module': module, 'compiler': compiler}, result='precompiled')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         return False
 
 @member(UnitStatusCacher)
@@ -135,7 +135,7 @@ def set_module_precompiled(self: UnitStatusCacher, module: Module, precompiled: 
 async def async_get_source_imports(self: UnitStatusCacher, source: Source) -> list[path]:
     try:
         imports = self._get(entry=['source', 'imports', source.file], check={'source': source, 'compiler': compiler}, result='imports')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         await source.async_preprocess()
         imports = re.findall(
             pattern=r'^\s*import\s+(\w+(?:[\.:]\w+)*)\s*;\s*$',
@@ -143,18 +143,18 @@ async def async_get_source_imports(self: UnitStatusCacher, source: Source) -> li
             flags  =re.MULTILINE
         )
         imports = [join_path(source.context_package.import_dir, add_file_suffix(join_path(*re.split(pattern=r'[.:]', string=import_)), 'cpp')) for import_ in imports]
-        await self.async_set_source_imports(source=source, imports=imports)
+        self.set_source_imports(source=source, imports=imports)
     return imports
 
 @member(UnitStatusCacher)
-async def async_set_source_imports(self: UnitStatusCacher, source: Source, imports: list[path]) -> None:
+def set_source_imports(self: UnitStatusCacher, source: Source, imports: list[path]) -> None:
     self._set(entry=['source', 'imports', source.file], check={'source': source, 'compiler': compiler}, result={'imports': imports})
 
 @member(UnitStatusCacher)
 def get_source_compiled(self: UnitStatusCacher, source: Source) -> bool:
     try:
         return self._get(entry=['source', 'compiled', source.file], check={'source': source, 'compiler': compiler}, result='compiled')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         return False
 
 @member(UnitStatusCacher)
@@ -162,21 +162,10 @@ def set_source_compiled(self: UnitStatusCacher, source: Source, compiled: bool) 
     self._set(entry=['source', 'compiled', source.file], check={'source': source, 'compiler': compiler}, result={'compiled': compiled})        
 
 @member(UnitStatusCacher)
-def get_object_libs(self: UnitStatusCacher, object: Object) -> list[path]:
-    try:
-        return self._get(entry=['object', 'libs', object.file], check={'object': object, 'compiler': compiler}, result='libs')
-    except UnitStatusCacher._StatusNotFoundError:
-        raise LogicError(f'object does not have a libs cache (from a module or source)')
-
-@member(UnitStatusCacher)
-def set_object_libs(self: UnitStatusCacher, object: Object, libs: list[path]) -> None:
-    self._set(entry=['object', 'libs', object.file], check={'object': object, 'compiler': compiler}, result={'libs': libs})
-
-@member(UnitStatusCacher)
 def get_object_shared(self: UnitStatusCacher, object: Object) -> bool:
     try:
         return self._get(entry=['object', 'shared', object.file], check={'object': object, 'compiler': compiler}, result='shared')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         return False
     
 @member(UnitStatusCacher)
@@ -187,7 +176,7 @@ def set_object_shared(self: UnitStatusCacher, object: Object, shared: bool) -> N
 def get_object_linked(self: UnitStatusCacher, object: Object) -> bool:
     try:
         return self._get(entry=['object', 'linked', object.file], check={'object': object, 'compiler': compiler}, result='linked')
-    except UnitStatusCacher._StatusNotFoundError:
+    except UnitStatusCacher._StatusNeedsUpdateError:
         return False
     
 @member(UnitStatusCacher)
@@ -199,11 +188,11 @@ def _get(self: UnitStatusCacher, entry: list[str], check: dict[str, typing.Any],
     ptr = self._content
     for subentry in entry:
         if subentry not in ptr.keys():
-            raise UnitStatusCacher._StatusNotFoundError()
+            raise UnitStatusCacher._StatusNeedsUpdateError()
         ptr = ptr[subentry]
     for subcheck in check.keys():
         if ptr[subcheck] != self._reflect(check[subcheck]):
-            raise UnitStatusCacher._StatusNotFoundError()
+            raise UnitStatusCacher._StatusNeedsUpdateError()
     return ptr[result]
 
 @member(UnitStatusCacher)
@@ -219,7 +208,7 @@ def _set(self: UnitStatusCacher, entry: list[str], check: dict[str, typing.Any],
         ptr[subresult] = self._reflect(result[subresult])
 
 @member(UnitStatusCacher)
-def _reflect(self: UnitStatusCacher, variable: typing.Any, depth: int = 1) -> typing.Any:
+def _reflect(self: UnitStatusCacher, variable: typing.Any, depth: int = 2) -> typing.Any:
     if isinstance(variable, (bool, int, float, str)):
         return variable
     elif isinstance(variable, list):

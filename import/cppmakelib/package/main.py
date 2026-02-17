@@ -1,20 +1,18 @@
 from cppmakelib.basic.config       import config
-from cppmakelib.logger.unit_status import UnitStatusLogger
-from cppmakelib.utility.decorator  import member, once
+from cppmakelib.cacher.unit_status import UnitStatusCacher
+from cppmakelib.package.basic      import Package
+from cppmakelib.utility.decorator  import member, once, unique
 from cppmakelib.utility.filesystem import current_dir, join_path, path
 from cppmakelib.utility.import_    import import_module
 import types
-import typing
-if typing.TYPE_CHECKING:
-    from cppmakelib.package.basic import Package
 
 class MainPackage(Package):
-    def           __new__  (cls)  -> MainPackage: ...
-    def           __init__ (self) -> None       : ...
-    def             build  (self) -> None       : ...
-    async def async_build  (self) -> None       : ...
-    def             install(self) -> None       : ...
-    async def async_install(self) -> None       : ...
+    def           __new__  (cls : type[MainPackage]) -> MainPackage: ...
+    def           __init__ (self: MainPackage)       -> None       : ...
+    def             build  (self: MainPackage)       -> None       : ...
+    async def async_build  (self: MainPackage)       -> None       : ...
+    def             install(self: MainPackage)       -> None       : ...
+    async def async_install(self: MainPackage)       -> None       : ...
     # ========
     name               : str  = 'main'
     dir                : path = ''
@@ -39,13 +37,14 @@ class MainPackage(Package):
     # ========
     require_packages   : list[Package]
     # ========
-    unit_status_cacher : UnitStatusLogger
+    unit_status_cacher : UnitStatusCacher
     # ========
     cppmake_file       : path
     cppmake            : types.ModuleType | None
     # ========
 
 @member(MainPackage)
+@unique
 def __init__(self: MainPackage) -> None:
     self.name                = 'main'
     self.dir                 = current_dir()
@@ -65,7 +64,7 @@ def __init__(self: MainPackage) -> None:
     self.link_flags          = []
     self.define_macros       = {}
     self.require_packages    = []
-    self.unit_status_cacher  = UnitStatusLogger(build_cache_dir=self.build_cache_dir)
+    self.unit_status_cacher  = UnitStatusCacher(build_cache_dir=self.build_cache_dir)
     self.cppmake_file        = 'cppmake.py'
     self.cppmake             = import_module(file=self.cppmake_file, globals={'self': self})
     
@@ -73,11 +72,14 @@ def __init__(self: MainPackage) -> None:
 @once
 def build(self: MainPackage) -> None:
     [package.install() for package in self.require_packages]
+    print('build package main')
     self.cppmake.build() if self.cppmake is not None and hasattr(self.cppmake, 'build') else None
 
 @member(MainPackage)
 @once
 async def async_install(self: MainPackage) -> None:
+    self.build()
+    print('install package main')
     self.cppmake.install() if self.cppmake is not None and hasattr(self.cppmake, 'install') else None
 
 main_package = MainPackage()

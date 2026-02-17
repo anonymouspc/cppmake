@@ -86,7 +86,7 @@ async def async_install(
             file=self.file,
             args=[
                 '-C', build_dir,
-                'install'
+                'install',
                 '--prefix', absolute_path(install_dir),
                 '-j', str(config.jobs)
             ]

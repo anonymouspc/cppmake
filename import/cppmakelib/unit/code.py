@@ -5,8 +5,8 @@ from cppmakelib.executor.scheduler import scheduler
 from cppmakelib.package.basic      import Package
 from cppmakelib.unit.preprocessed  import Preprocessed
 from cppmakelib.utility.algorithm  import recursive_collect
-from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
-from cppmakelib.utility.filesystem import get_file_modify_time, join_path, normal_path, path, relative_path, replace_file_suffix
+from cppmakelib.utility.decorator  import member, once, pre_transform, pre_check, syncable, unique_in
+from cppmakelib.utility.filesystem import get_file_modify_time, is_file, join_path, normal_path, path, relative_path, replace_file_suffix
 from cppmakelib.utility.time       import time
 
 class Code:
@@ -29,7 +29,8 @@ class Code:
 @member(Code)
 @syncable
 @unique_in(context.package)
-@pre(1, normal_path)
+@pre_transform(1, normal_path)
+@pre_check(1, is_file)
 async def __ainit__(self: Code, file: path) -> None:
     self.file              = file
     self.modify_time       = get_file_modify_time(self.file)

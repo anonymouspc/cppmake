@@ -19,6 +19,7 @@ class Binary:
 @member(Binary)
 @unique_in(context.package)
 @pre(1, normal_path)
+@pre(1, check_is_dir)
 def __init__(self: Binary, file: path) -> None:
     self.file            = file
     self.modify_time     = get_file_modify_time(self.file)

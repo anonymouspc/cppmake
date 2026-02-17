@@ -1,3 +1,4 @@
+from cppmakelib.basic.config       import config
 from cppmakelib.cacher.unit_status import UnitStatusCacher
 from cppmakelib.utility.decorator  import member, once, unique
 from cppmakelib.utility.filesystem import join_path, path
@@ -5,10 +6,10 @@ from cppmakelib.utility.import_    import import_module
 import types
 
 class Package:
-    def __new__  (cls : type[Package],  name: str) -> Package: ...
-    def __init__ (self, name: str) -> None   : ...
-    def   build  (self)            -> None   : ...
-    def   install(self)            -> None   : ...
+    def __new__  (cls : type[Package], name: str) -> Package: ...
+    def __init__ (self: Package,       name: str) -> None   : ...
+    def   build  (self: Package)                  -> None   : ...
+    def   install(self: Package)                  -> None   : ...
     # ========
     name               : str
     dir                : path
@@ -44,17 +45,16 @@ class Package:
 @unique
 def __init__(self: Package, name: str) -> None:
     from cppmakelib.basic.context import context
-    from cppmakelib.package.main  import main_package
-    with context.switch(package=main_package):
+    with context.default():
         self.name                = name
-        self.dir                 = join_path(main_package.pkg_dir, self.name)
+        self.dir                 = join_path('pkg', self.name)
         self.include_dir         = join_path(self.dir, 'include')
         self.import_dir          = join_path(self.dir, 'import')
-        self.build_dir           = join_path(main_package.build_dir, 'pkg', self.name, 'build')
+        self.build_dir           = join_path(config.build_dir, config.type, 'pkg', self.name, 'build')
         self.build_import_dir    = join_path(self.build_dir, 'import')
         self.build_include_dir   = join_path(self.build_dir, 'include')
         self.build_cache_dir     = join_path(self.build_dir, '.cache')
-        self.install_dir         = join_path(main_package.build_dir, 'pkg', self.name, 'install')
+        self.install_dir         = join_path(config.build_dir, config.type, 'pkg', self.name, 'install')
         self.install_bin_dir     = join_path(self.install_dir, 'bin')
         self.install_import_dir  = join_path(self.install_dir, 'import')
         self.install_include_dir = join_path(self.install_dir, 'include')
@@ -63,10 +63,10 @@ def __init__(self: Package, name: str) -> None:
         self.link_flags          = []
         self.define_macros       = {}
         self.require_packages    = []
-        self.unit_status_cacher  = UnitStatusLogger(build_cache_dir=self.build_cache_dir)
-        self.cppmake_file        = join_path(self.dir, 'cppmake.py')
+        self.unit_status_cacher  = UnitStatusCacher(build_cache_dir=self.build_cache_dir)
     with context.switch(package=self):
-        self.cppmake = import_module(file=self.cppmake_file, globals={'self': self})
+        self.cppmake_file        = join_path(self.dir, 'cppmake.py')
+        self.cppmake             = import_module(file=self.cppmake_file, globals={'self': self})
 
 @member(Package)
 @once

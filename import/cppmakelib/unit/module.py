@@ -33,7 +33,7 @@ async def __ainit__(self: Module, file: path) -> None:
     self.name             = await self.context_package.unit_status_cacher.async_get_module_name(module=self)
     self.precompiled_file = join_path(self.context_package.build_import_dir, add_file_suffix(self.name.replace(':', '-'), compiler.precompiled_suffix))
     self.object_file      = join_path(self.context_package.build_import_dir, add_file_suffix(self.name.replace(':', '-'), system.object_suffix))
-    self.import_modules   = await when_all([then(Module.__new__(Module, file), lambda module: module.__ainit__(file)) for file in await self.context_package.unit_status_cacher.async_get_module_imports(module=self)])
+    self.import_modules   = await when_all([then(Module.__new__(Module, ), lambda module: module.__ainit__(name)) for name in await self.context_package.unit_status_cacher.async_get_module_imports(module=self)])
 
 @member(Module)
 @syncable

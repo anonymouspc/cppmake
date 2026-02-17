@@ -5,7 +5,6 @@ from cppmakelib.executor.scheduler import scheduler
 from cppmakelib.system.all         import system
 from cppmakelib.unit.code          import Code
 from cppmakelib.unit.module        import Module
-from cppmakelib.unit.object        import Object
 from cppmakelib.utility.algorithm  import recursive_collect
 from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
 from cppmakelib.utility.filesystem import join_path, normal_path, path, relative_path, replace_file_suffix
@@ -22,6 +21,8 @@ class Source(Code):
     import_modules : list[Module]
 
 
+
+from cppmakelib.unit.object        import Object
 
 @member(Source)
 @syncable
@@ -50,7 +51,7 @@ async def async_compile(self: Source) -> Object:
                 include_dirs   =[self.context_package.build_include_dir] + recursive_collect(self.context_package, next=lambda package: package.require_packages, collect=lambda package: package.install_include_dir),
             )
         self.context_package.unit_status_cacher.set_source_compiled(source=self, compiled=True)
-    return Object(self.object_file, from_code=self)
+    return Object(self.object_file, from_=self)
 
 @member(Source)
 @syncable

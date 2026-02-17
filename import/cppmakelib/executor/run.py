@@ -3,28 +3,31 @@ from cppmakelib.cacher.compile_commands import compile_commands_cacher
 from cppmakelib.error.subprocess        import SubprocessError
 from cppmakelib.executor.operation      import when_all
 from cppmakelib.executor.scheduler      import Scheduler
+from cppmakelib.utility.color           import green
+from cppmakelib.utility.environment     import current_env
 from cppmakelib.utility.filesystem      import current_dir, path, resolvable_path
 from cppmakelib.utility.decorator       import implement, syncable
 import asyncio
+import shlex
 import sys
 import typing
 
 @typing.overload
-def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[False] = False) -> None           : ...
+def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[False] = False) -> None           : ...
 @typing.overload
-def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[True])          -> str            : ...
+def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[True])          -> str            : ...
 @typing.overload
-def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[False] = False) -> str            : ...
+def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[False] = False) -> str            : ...
 @typing.overload
-def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[True])          -> tuple[str, str]: ...
+def             run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[True])          -> tuple[str, str]: ...
 @typing.overload
-async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[False] = False) -> None           : ...
+async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[False] = False) -> None           : ...
 @typing.overload
-async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[True])          -> str            : ...
+async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[False] = False, return_stderr: typing.Literal[True])          -> str            : ...
 @typing.overload
-async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[False] = False) -> str            : ...
+async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[False] = False) -> str            : ...
 @typing.overload
-async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = {}, print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[True])          -> tuple[str, str]: ...
+async def async_run(file: resolvable_path, args: list[str] = [], cwd: path = current_dir(), env: dict[str, str] = current_env(), print_command: bool = config.verbose, print_stdout: bool = config.verbose, print_stderr: bool = True, log_command: path | None = None, log_stdout: path | None = None, log_stderr: path | None = None, *, return_stdout: typing.Literal[True],          return_stderr: typing.Literal[True])          -> tuple[str, str]: ...
 
 
 
@@ -35,7 +38,7 @@ async def async_run(
     file         : resolvable_path,
     args         : list[str]        = [], 
     cwd          : path             = current_dir(), 
-    env          : dict[str, str]   = {}, 
+    env          : dict[str, str]   = current_env(), 
     print_command: bool             = config.verbose,
     print_stdout : bool             = config.verbose,
     print_stderr : bool             = True,
@@ -48,7 +51,7 @@ async def async_run(
     global _internal_scheduler
     async with _run_scheduler.schedule():
         if print_command:
-            print(' '.join([file] + args))
+            print(green(shlex.join([file] + args)))
         if log_command is not None:
             compile_commands_cacher.set(file=log_command, command=[file] + args)
         proc = await asyncio.subprocess.create_subprocess_exec(
