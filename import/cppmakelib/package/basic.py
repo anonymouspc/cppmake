@@ -20,7 +20,6 @@ class Package:
     build_dir          : path
     build_import_dir   : path
     build_include_dir  : path
-    build_cache_dir    : path
     install_dir        : path
     install_bin_dir    : path
     install_import_dir : path

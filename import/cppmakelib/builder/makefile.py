@@ -1,3 +1,5 @@
+import re
+
 from cppmakelib.basic.config       import config
 from cppmakelib.compiler.all       import compiler
 from cppmakelib.error.config       import ConfigError
@@ -17,6 +19,10 @@ class Makefile:
     async def async_build    (self: Makefile,       build_dir: path)                                               -> None    : ...
     def             install  (self: Makefile,       build_dir: path, install_dir: path)                            -> None    : ...
     async def async_install  (self: Makefile,       build_dir: path, install_dir: path)                            -> None    : ...
+    
+    @staticmethod
+    def parse(file: path) -> dict[str, list[str]]: ...
+    
     file       : resolvable_path
     version    : Version
     build_flags: list[str]
@@ -94,6 +100,28 @@ async def async_install(
     except:
         delete_dir(install_dir, not_exist_ok=True)
         raise
+
+@member(Makefile)
+def parse(file: path) -> dict[str, list[str]]:
+    regex_word         = rf'[\w\./]+'
+    regex_target       = rf'{word}'
+    regex_targets      = rf'{word}(?:\s+{word})*'
+    regex_dependency   = rf'{word}'
+    regex_dependencies = rf'{word}(?:(?:\s|\n|\\\$)+{word})*'
+    regex_rule         = rf'{targets}\s*:\s*{dependencies}'
+    regex_rules        = rf'{rule}(?:\n+{rule})*'
+
+    content = open(file, 'r').read()
+    result: dict[str, list[str]] = {}
+    rules = re.match(pattern=regex_rules, string=content)
+    if rules is not None:
+        for rule in re.findall(pattern=regex_rule, string=rules.group(0)):
+            targets      = rule.group(0)
+            target       = re.findall(pattern=regex_target, string=targets)
+            dependencies = rule.group(1)
+            dependency   = re.findall(pattern=regex_dependencies, string=dependencies)
+            result
+
 
 @member(Makefile)
 async def _async_get_version(self: Makefile) -> Version:

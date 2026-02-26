@@ -1,7 +1,9 @@
 from cppmakelib.basic.config        import config
+from cppmakelib.builder.makefile    import Makefile
 from cppmakelib.error.config        import ConfigError
 from cppmakelib.error.subprocess    import SubprocessError
 from cppmakelib.executor.run        import async_run
+from cppmakelib.system.all          import system
 from cppmakelib.utility.decorator   import member, syncable, unique_on
 from cppmakelib.utility.environment import append_current_env
 from cppmakelib.utility.filesystem  import get_file_name, is_file, iterate_dir, join_path, new_dir, normal_path, parent_dir, path, resolvable_path, remove_file_suffix, replace_file_suffix, resolve_file
@@ -14,6 +16,8 @@ class Gcc:
     async def    __ainit__    (self: Gcc,       file: resolvable_path = 'g++')                                                                                                                                                                  -> None: ...
     def             preprocess(self: Gcc,       code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
     async def async_preprocess(self: Gcc,       code_file  : path, preprocessed_file: path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
+    def             prescan   (self: Gcc,       code_file  : path, prescanned_file  : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
+    async def async_prescan   (self: Gcc,       code_file  : path, prescanned_file  : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
     def             preparse  (self: Gcc,       header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
     async def async_preparse  (self: Gcc,       header_file: path, preparsed_file   : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None: ...
     def             precompile(self: Gcc,       module_file: path, precompiled_file : path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = []) -> None: ...
@@ -24,10 +28,9 @@ class Gcc:
     async def async_share     (self: Gcc,       object_file: path, dynamic_file     : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                -> None: ...
     def             link      (self: Gcc,       object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                -> None: ...
     async def async_link      (self: Gcc,       object_file: path, executable_file  : path,                    link_flags   : list[str] = [],                                     lib_files   : list[path] = [])                                -> None: ...
-    preprocessed_suffix: str = 'ipp'
+    preprocessed_suffix: str = 'ii'
     preparsed_suffix   : str = 'gch'
     precompiled_suffix : str = 'gcm'  
-    diagnostic_suffix  : str = 'sarif'
     file               : resolvable_path
     version            : Version
     compile_flags      : list[str]
@@ -88,8 +91,50 @@ async def async_preprocess(
             '-E', code_file,
             '-o', preprocessed_file
         ],
-        print_stdout=False,
     )
+
+@member(Gcc)
+@syncable
+async def async_prescan(
+    self           : Gcc,
+    code_file      : path,
+    prescanned_file: path,
+    compile_flags  : list[str] = [],
+    define_macros  : dict[str, str] = {},
+    include_dirs   : list[path] = [],
+) -> None:
+    new_dir(parent_dir(prescanned_file), exist_ok=True)
+    await async_run(
+        file=self.file,
+        args=[
+            *(self.compile_flags + compile_flags),
+            *[f'-D{key}={value}' for key, value  in (self.define_macros | define_macros).items()],
+            *[f'-I{include_dir}' for include_dir in include_dirs],
+            '-M', code_file,
+            '-o', prescanned_file
+        ]
+    )
+    export  : str | None = None
+    imports : list[path] = []
+    includes: list[path] = []
+    dep = Makefile.parse(prescanned_file)
+    for target in dep.keys():
+        if target.endswith('.c++-module'):
+            export = target.removesuffix('.c++-module')
+        if target == get_file_name(replace_file_suffix(code_file, system.object_suffix)):
+            for dependency in dep[target]:
+                if dependency.endswith('.c++-module'):
+                    imports += dependency.removesuffix('.c++-module')
+                else:
+                    includes += dependency
+    writer = open(prescanned_file, 'w')
+    if export is not None:
+        writer.write(f'export module {export};\n')
+    for import_ in imports:
+        writer.write(f'import {import_};\n')
+    for include in includes:
+        writer.write(f'#include "{include}";\n')
+    writer.close()
 
 @member(Gcc)
 @syncable

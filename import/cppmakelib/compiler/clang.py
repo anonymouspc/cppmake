@@ -4,13 +4,16 @@ from cppmakelib.error.config       import ConfigError
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.utility.decorator  import member, syncable, unique_on
-from cppmakelib.utility.filesystem import is_file, join_path, normal_path, new_dir, parent_dir, path, resolve_file, resolvable_path
+from cppmakelib.utility.filesystem import is_file, join_path, normal_path, new_dir, parent_dir, path, replace_file_suffix, resolve_file, resolvable_path
 from cppmakelib.utility.version    import Version
+import re
 
 class Clang(Gcc):
     def           __new__     (cls : type[Clang], file: resolvable_path = 'clang++')                                                                                                                                                             -> Clang: ...
     def           __init__    (self: Clang,       file: resolvable_path = 'clang++')                                                                                                                                                             -> None : ...
     async def    __ainit__    (self: Clang,       file: resolvable_path = 'clang++')                                                                                                                                                             -> None : ...
+    def             prescan   (self: Clang,       code_file  : path, prescanned_file : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None : ...
+    async def async_prescan   (self: Clang,       code_file  : path, prescanned_file : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None : ...
     def             precompile(self: Clang,       module_file: path, precompiled_file: path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = []) -> None : ...
     async def async_precompile(self: Clang,       module_file: path, precompiled_file: path, object_file: path, compile_flags: list[str] = [], define_macros: dict[str, str] = {}, import_dirs : list[path] = [], include_dirs: list[path] = []) -> None : ...
     def             preparse  (self: Clang,       header_file: path, preparsed_file  : path,                    compile_flags: list[str] = [], define_macros: dict[str, str] = {}, include_dirs: list[path] = [])                                -> None : ...
@@ -59,6 +62,43 @@ async def __ainit__(self: Clang, file: resolvable_path = 'clang++') -> None:
     }
     self.stdlib_name        = await self._async_get_stdlib_name()
     self.stdlib_module_file = await self._async_get_stdlib_module_file()
+
+@member(Clang)
+@syncable
+async def async_prescan(
+    self           : Clang,
+    code_file      : path,
+    prescanned_file: path,
+    compile_flags  : list[str] = [],
+    define_macros  : dict[str, str] = {},
+    include_dirs   : list[path] = [],
+) -> None:
+    new_dir(parent_dir(prescanned_file), exist_ok=True)
+    await Gcc.async_prescan(
+        self           =self,
+        code_file      =code_file,
+        prescanned_file=prescanned_file,
+        compile_flags  =compile_flags,
+        define_macros  =define_macros,
+        include_dirs   =include_dirs
+    )
+    preprocessed_file = replace_file_suffix(prescanned_file, Clang.preprocessed_suffix)
+    await self.async_preprocess(
+        code_file        =code_file,
+        preprocessed_file=preprocessed_file,
+        compile_flags    =compile_flags,
+        define_macros    =define_macros,
+        include_dirs     =include_dirs
+    )
+    content = open(preprocessed_file, 'r').read()
+    export  = re.search (pattern=r'^\s*export\s+module\s+([\w\.:]+)\s*;\s*$',      string=content, flags=re.MULTILINE)
+    imports = re.findall(pattern=r'^\s*(?:export\s+)?import\s+([\w\.:]+)\s*;\s*$', string=content, flags=re.MULTILINE)
+    writer = open(prescanned_file, 'a')
+    if export is not None:
+        writer.write(f'export module {export};\n')
+    for import_ in imports:
+        writer.write(f'import {import_};\n')
+    writer.close()
 
 @member(Clang)
 @syncable

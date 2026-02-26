@@ -1,6 +1,6 @@
 from cppmakelib.compiler.all      import compiler
-from cppmakelib.utility.filesystemimport path
-from cppmakelib.utility.decorator import member
+from cppmakelib.utility.filesystem import path
+from cppmakelib.utility.decorator  import member
 
 class RemoteCompiler:
     def __init__(self, protocol: Protocol): ...
@@ -23,8 +23,16 @@ compiler         = DistributeCompiler(local_compiler, remote_compilers)
 
 
 @member(RemoteCompiler)
-def preprocess(self: RemoteCompiler):
-    return local_compiler.preprocess()
+async def async_compile(
+    self           : RemoteCompiler,
+    source_file    : path,
+    object_file    : path,
+    compile_flags  : list[str]      = [],
+    define_macros  : dict[str, str] = {}, 
+    import_dirs    : list[path]     = [], 
+    include_dirs   : list[path]     = []
+) -> None:
+    
 
 @member(RemoteCompiler)
 def precompile(
