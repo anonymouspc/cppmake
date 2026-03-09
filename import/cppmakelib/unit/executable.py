@@ -1,12 +1,10 @@
-from cppmakelib.basic.context      import context
 from cppmakelib.error.subprocess   import SubprocessError
 from cppmakelib.executor.run       import async_run
 from cppmakelib.executor.scheduler import scheduler
-from cppmakelib.unit.binary        import Binary
 from cppmakelib.utility.decorator  import member, once, pre, syncable, unique_in
 from cppmakelib.utility.filesystem import normal_path, path
 
-class Executable(Binary):
+class Executable:
     def           __new__  (cls : type[Executable], file: path) -> Executable: ...
     def           __init__ (self: Executable,       file: path) -> None      : ...
     def             execute(self: Executable)                   -> None      : ...

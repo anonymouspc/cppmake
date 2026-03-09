@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 from cppmakelib.basic.config        import config
 
 from cppmakelib.compiler.all        import compiler
