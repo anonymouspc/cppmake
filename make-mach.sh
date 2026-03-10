@@ -1,8 +1,10 @@
 # Make packages
-mkdir -p .cppmake/pkg
-pkg/boost/bootstrap.sh
-pkg/boost/b2 --with-asio --with-process link=static --build-dir=.cppmake/pkg/boost/build --prefix=.cppmake/pkg/boost/install 
+(
+    cd pkg/boost
+    ./bootstrap.sh
+    ./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
+)
 
 # Make cppmake
 mkdir -p .cppmake/bin
-clang++ -std=c++26 -I.cppmake/pkg/boost/install/include bin/cppmake.cpp -o .cppmake/bin/cppmake
+clang++ -std=c++26 -Iinclude -I.cppmake/pkg/boost/install/include bin/cppmake.cpp -o .cppmake/bin/cppmake

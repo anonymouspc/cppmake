@@ -2,7 +2,7 @@
 (
     cd pkg/boost
     ./bootstrap.sh
-    ./b2 --with-process --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install install
+    ./b2 --with-process --with-program-options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
 )
 
 # Make cppmake
