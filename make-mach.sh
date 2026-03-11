@@ -7,4 +7,7 @@
 
 # Make cppmake
 mkdir -p .cppmake/bin
-clang++ -std=c++26 -Iinclude -I.cppmake/pkg/boost/install/include bin/cppmake.cpp -o .cppmake/bin/cppmake
+clang++ -std=c++26 -Iinclude -I.cppmake/pkg/boost/install/include -x c++-modules import/cppmake.cpp -o .cppmake/import/cppmake.pcm
+clang++ .cppmake/import/cppmake.pcm -o .cppmake/import/cppmake.o
+clang++ -std=c++26 -fprebuilt-module-path=.cppmake/import bin/main.cpp -o .cppmake/bin/main.o 
+clang++ .cppmake/bin/main.o .cppmake/import/cppmake.o .cppmake/pkg/boost/install/lib/*.a -o .cppmake/bin/main

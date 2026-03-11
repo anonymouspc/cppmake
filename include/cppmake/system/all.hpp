@@ -1,10 +1,40 @@
+#include <cppmake/system/
+#include <cppmake/system/base.hpp>
 #include <cppmake/system/linux.hpp>
 #include <cppmake/system/mach.hpp>
 #include <cppmake/system/win32.hpp>
 #include <cppmake/utility/template.hpp>
+#include <memory>
+#include <vector>
 
 namespace cppmake
 {
+    auto system_ptr = []
+        {
+            auto system_candidate_ptrs = std::vector<std::unique_ptr<system>>();
+            auto errors = std::vector<std::unique_ptr<config_error>>();
+            template_for<linux, mach, win32>([&] <class System>
+                {
+                    try
+                    {
+                        system_candidate_ptrs.push_back(System());
+                    }
+                    catch (const std::runtime_error& error)
+                    {
+                        
+                    }
+                }
+        }
+
+
+    auto system_ptr = std::make_unique<system>([]
+        {
+            
+        });
+
+    system& system = *system_ptr;
+    
+    
     class any_system
     {
         public:

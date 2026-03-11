@@ -21,9 +21,9 @@ namespace cppmake
         std::filesystem::path install_dir;
     }
 
-    auto positional_parser = boost::program_options::positional_options_description().add
+    auto positional_option_description = boost::program_options::positional_options_description().add
         ("project", 1);
-    auto sorted_parser     = boost::program_options::options_description("options").add_options()
+    auto named_option_description = boost::program_options::options_description("options").add_options()
         ("target",      boost::program_options::value<std::string>          (&config::target)     ->default_value("."),                                 "select make target")
         ("compiler",    boost::program_options::value<std::filesystem::path>(&config::compiler)   ->default_value(system.compiler),                     "use specific C++ compiler")
         ("std",         boost::program_options::value<config::std_t>        (&config::std)        ->default_value(config::std_t::cpp26),                "use specific C++ standard")

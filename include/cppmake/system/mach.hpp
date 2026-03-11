@@ -1,20 +1,13 @@
-#include <filesystem>
-#include <string>
+#include <cppmake/error/config.hpp>
+#include <cppmake/system/base.hpp>
 #define BOOST_PROCESS_USE_STD_FS
 #include <boost/process.hpp>
 
 namespace cppmake
 {
     class mach
+        : public system
     {
-        public:
-            inline static std::string           executable_suffix = "";
-            inline static std::string           object_suffix     = "o";
-            inline static std::string           static_suffix     = "a";
-            inline static std::string           dynamic_suffix    = "dylib";
-            inline static std::filesystem::path compiler          = boost::process::environment::find_executable("clang++");
-            inline static std::filesystem::path install_dir       = "/usr";
-    
         public:
             mach ( );
     };
@@ -23,7 +16,14 @@ namespace cppmake
 
     mach::mach ( )
     {
-        #ifndef __MACH__
+        #ifdef __MACH__
+            this->system::executable_suffix = "";
+            this->system::object_suffix     = "o";
+            this->system::static_suffix     = "a";
+            this->system::dynamic_suffix    = "dylib";
+            this->system::compiler_path     = boost::process::environment::find_executable("clang++");
+            this->system::install_dir       = "/usr";
+        #else
             throw config_error("__MACH__ is not defined");
         #endif
     }

@@ -1,20 +1,13 @@
-#include <filesystem>
-#include <string>
+#include <cppmake/error/config.hpp>
+#include <cppmake/system/base.hpp>
 #define BOOST_PROCESS_USE_STD_FS
 #include <boost/process.hpp>
 
 namespace cppmake
 {
     class win32
+        : public system
     {
-        public:
-            inline static std::string           executable_suffix = "exe";
-            inline static std::string           object_suffix     = "obj";
-            inline static std::string           static_suffix     = "lib";
-            inline static std::string           dynamic_suffix    = "dll";
-            inline static std::filesystem::path compiler          = boost::process::environment::find_executable("cl.exe");
-            inline static std::filesystem::path install_dir       = "C:\\Program Files";
-    
         public:
             win32 ( );
     };
@@ -23,7 +16,14 @@ namespace cppmake
 
     win32::win32 ( )
     {
-        #ifndef _WIN32 
+        #ifdef _WIN32
+            this->system::executable_suffix = "exe";
+            this->system::object_suffix     = "obj";
+            this->system::static_suffix     = "lib";
+            this->system::dynamic_suffix    = "dll";
+            this->system::compiler_path     = boost::process::environment::find_executable("cl.exe");
+            this->system::install_dir       = "C:\\Program Files";
+        #else
             throw config_error("_WIN32 is not defined");
         #endif
     }
