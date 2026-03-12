@@ -1,7 +1,8 @@
-#include <cppmake/error/config.hpp>
-#include <cppmake/system/base.hpp>
+#pragma once
 #define BOOST_PROCESS_USE_STD_FS
 #include <boost/process.hpp>
+#include <cppmake/error/config.hpp>
+#include <cppmake/system/base.hpp>
 
 namespace cppmake
 {
