@@ -4,7 +4,7 @@
 
 namespace cppmake
 {
-    class system
+    class system_t
     {
         public:
             std::string           executable_suffix;

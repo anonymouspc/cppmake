@@ -7,7 +7,7 @@
 namespace cppmake
 {
     class mach
-        : public system
+        : public system_t
     {
         public:
             mach ( );
@@ -18,12 +18,12 @@ namespace cppmake
     mach::mach ( )
     {
         #ifdef __MACH__
-            this->system::executable_suffix = "";
-            this->system::object_suffix     = "o";
-            this->system::static_suffix     = "a";
-            this->system::dynamic_suffix    = "dylib";
-            this->system::compiler_path     = boost::process::environment::find_executable("clang++");
-            this->system::install_dir       = "/usr";
+            this->system_t::executable_suffix = "";
+            this->system_t::object_suffix     = "o";
+            this->system_t::static_suffix     = "a";
+            this->system_t::dynamic_suffix    = "dylib";
+            this->system_t::compiler_path     = boost::process::environment::find_executable("clang++");
+            this->system_t::install_dir       = "/usr";
         #else
             throw config_error("__MACH__ is not defined");
         #endif

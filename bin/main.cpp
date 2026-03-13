@@ -1,6 +1,7 @@
+import std;
 import cppmake;
 
-int main ( int argc, char** argv )
+int main ( )
 {
-    cppmake::config = cppmake::config_t(argc, argv);
+    std::println("{}", cppmake::config.verbose);
 }

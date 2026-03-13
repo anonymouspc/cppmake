@@ -5,6 +5,10 @@
 
 namespace cppmake
 {
+    using resolvable_path = std::string;
+
+    void resolve ( resolvable_path );
+
     class resolvable_path
     {
         public:

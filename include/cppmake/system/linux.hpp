@@ -7,7 +7,7 @@
 namespace cppmake
 {
     class linux
-        : public system
+        : public system_t
     {
         public:
             linux ( );
@@ -18,12 +18,12 @@ namespace cppmake
     linux::linux ( )
     {
         #ifdef __linux__
-            this->system::executable_suffix = "";
-            this->system::object_suffix     = "o";
-            this->system::static_suffix     = "a";
-            this->system::dynamic_suffix    = "so";
-            this->system::compiler_path     = boost::process::environment::find_executable("g++");
-            this->system::install_dir       = "/usr";
+            this->system_t::executable_suffix = "";
+            this->system_t::object_suffix     = "o";
+            this->system_t::static_suffix     = "a";
+            this->system_t::dynamic_suffix    = "so";
+            this->system_t::compiler_path     = boost::process::environment::find_executable("g++");
+            this->system_t::install_dir       = "/usr";
         #else
             throw config_error("__linux__ is not defined");
         #endif

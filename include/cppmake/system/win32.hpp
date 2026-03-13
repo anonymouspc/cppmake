@@ -7,7 +7,7 @@
 namespace cppmake
 {
     class win32
-        : public system
+        : public system_t
     {
         public:
             win32 ( );
@@ -18,12 +18,12 @@ namespace cppmake
     win32::win32 ( )
     {
         #ifdef _WIN32
-            this->system::executable_suffix = "exe";
-            this->system::object_suffix     = "obj";
-            this->system::static_suffix     = "lib";
-            this->system::dynamic_suffix    = "dll";
-            this->system::compiler_path     = boost::process::environment::find_executable("cl.exe");
-            this->system::install_dir       = "C:\\Program Files";
+            this->system_t::executable_suffix = "exe";
+            this->system_t::object_suffix     = "obj";
+            this->system_t::static_suffix     = "lib";
+            this->system_t::dynamic_suffix    = "dll";
+            this->system_t::compiler_path     = boost::process::environment::find_executable("cl.exe");
+            this->system_t::install_dir       = "C:\\Program Files";
         #else
             throw config_error("_WIN32 is not defined");
         #endif

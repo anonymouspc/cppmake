@@ -10,27 +10,30 @@
 
 namespace cppmake
 {
-    // auto system_ptr = []
-    //     {
-    //         auto candidate_ptrs = std::vector<std::unique_ptr<system>>();
-    //         auto errors         = std::vector<config_error>();
-    //         template_for<linux, mach, win32>([&] <class System>
-    //             {
-    //                 try
-    //                 {
-    //                     candidate_ptrs.push_back(std::make_unique<System>());
-    //                 }
-    //                 catch (const config_error& error)
-    //                 {
-    //                     errors.push_back(error);
-    //                 }
-    //             });
-    //         if (candidate_ptrs.size() == 0)
-    //             throw config_error("system is not recognized");
-    //         else if (candidate_ptrs.size() == 1)
-    //             return candidate_ptrs[0];
-    //     } ();
+    extern system_t& system;
 
-    // system& system = *system_ptr;
+    
 
+    auto system_ptr = []
+        {
+            auto values = std::vector<std::unique_ptr<system_t>>();
+            
+            template_for<linux, mach, win32>([&] <class System>
+                {
+                    try
+                    {
+                        values.push_back(std::make_unique<System>());
+                    }
+                    catch (const config_error& error) { }
+                });
+
+            if (values.size() == 0)
+                throw config_error("system is not recognized");
+            else if (values.size() == 1)
+                return std::move(values[0]);
+            else // if (values.size() >= 2 )
+                throw config_error("system is ambiguous");
+        } ();
+
+    system_t& system = *system_ptr;
 }
