@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include <cppmakelib/error/any.hpp>
 #include <cppmakelib/error/config.hpp>
 #include <cppmakelib/error/grouped.hpp>
 #include <cppmakelib/system/base.hpp>
@@ -36,7 +35,7 @@ namespace cppmake
             if (values.size() == 0)
                 try 
                 { 
-                    throw grouped_exception<config_error>(errors); 
+                    throw __grouped_exception<config_error>(errors); 
                 } 
                 catch (...) 
                 { 
