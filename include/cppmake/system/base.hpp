@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <string>
+#include <cppmake/utility/filesystem.hpp>
 
 namespace cppmake
 {
@@ -11,7 +12,7 @@ namespace cppmake
             std::string           object_suffix;
             std::string           static_suffix;
             std::string           dynamic_suffix;
-            std::filesystem::path compiler_path;
+            resolvable_path       compiler_path;
             std::filesystem::path install_dir;
     };
 }

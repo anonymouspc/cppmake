@@ -17,16 +17,10 @@ namespace cppmake
     auto system_ptr = []
         {
             auto values = std::vector<std::unique_ptr<system_t>>();
-            
             template_for<linux, mach, win32>([&] <class System>
                 {
-                    try
-                    {
-                        values.push_back(std::make_unique<System>());
-                    }
-                    catch (const config_error& error) { }
+                    try { values.push_back(std::make_unique<System>()); } catch (const config_error& error) { }
                 });
-
             if (values.size() == 0)
                 throw config_error("system is not recognized");
             else if (values.size() == 1)

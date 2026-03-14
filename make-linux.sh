@@ -1,8 +1,8 @@
-# pkg
-cd pkg/boost
-./bootstrap.sh
-./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
-cd ../..
+# # pkg
+# cd pkg/boost
+# ./bootstrap.sh
+# ./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
+# cd ../..
 
 # import
 mkdir -p .cppmake/import
@@ -11,11 +11,11 @@ g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/import/g++-mapper.txt -c $(fin
 echo "cppmake .cppmake/import/cppmake.gcm" >> .cppmake/import/g++-mapper.txt
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/import/g++-mapper.txt -Iinclude -I.cppmake/pkg/boost/install/include -Wno-expose-global-module-tu-local -c import/cppmake.cpp -o .cppmake/import/cppmake.o -fdiagnostics-add-output=sarif:file=.cppmake/import/cppmake.sarif
 
-# lib
-mkdir -p .cppmake/lib
-g++ -shared .cppmake/import/cppmake.o .cppmake/pkg/boost/install/lib/*.a -o .cppmake/lib/cppmake.so
+# # lib
+# mkdir -p .cppmake/lib
+# g++ -shared .cppmake/import/cppmake.o .cppmake/pkg/boost/install/lib/*.a -o .cppmake/lib/cppmake.so
 
-# bin
-mkdir -p .cppmake/bin
-g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/import/g++-mapper.txt -c bin/main.cpp -o .cppmake/bin/main.o -fdiagnostics-add-output=sarif:file=.cppmake/bin/main.sarif
-g++ .cppmake/bin/main.o .cppmake/lib/cppmake.so -o .cppmake/bin/main
+# # bin
+# mkdir -p .cppmake/bin
+# g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/import/g++-mapper.txt -c bin/main.cpp -o .cppmake/bin/main.o -fdiagnostics-add-output=sarif:file=.cppmake/bin/main.sarif
+# g++ .cppmake/bin/main.o .cppmake/lib/cppmake.so -o .cppmake/bin/main

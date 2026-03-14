@@ -6,32 +6,12 @@
 namespace cppmake
 {
     using resolvable_path = std::string;
+    std::filesystem::path resolve ( const resolvable_path& );
 
-    void resolve ( resolvable_path );
 
-    class resolvable_path
+
+    std::filesystem::path resolvable ( const resolvable_path& path )
     {
-        public:
-            resolvable_path ( ) = default;
-            resolvable_path ( std::string );
-
-        public:
-            std::filesystem::path resolve ( ) const;
-
-        private:
-            std::string path;
-    };
-
-
-
-    resolvable_path::resolvable_path ( std::string path )
-        : path(path)
-    {
-
-    }
-
-    std::filesystem::path resolvable_path::resolve ( ) const
-    {
-        return boost::process::environment::find_executable(this->path);
+        return boost::process::environment::find_executable(path);
     }
 }

@@ -1,8 +1,8 @@
-# # pkg
-# cd pkg/boost
-# ./bootstrap.sh
-# ./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
-# cd ../..
+# pkg
+cd pkg/boost
+./bootstrap.sh
+./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
+cd ../..
 
 # import
 mkdir -p .cppmake/import
