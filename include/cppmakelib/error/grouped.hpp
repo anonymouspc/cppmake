@@ -1,6 +1,6 @@
+#pragma once
 #include <ranges>
 #include <vector>
-#include <cppmakelib/error/any.hpp>
 #include <cppmakelib/utility/concept.hpp>
 
 namespace cppmake
