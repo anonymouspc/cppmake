@@ -1,5 +1,5 @@
 module;
-#include <cppmake.hpp>
+#include <cppmake>
 
 export module cppmake;
 

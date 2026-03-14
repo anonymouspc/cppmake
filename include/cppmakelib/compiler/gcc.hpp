@@ -1,6 +1,6 @@
 #pragma once
 #include <ranges>
-#include <cppmake/utility/filesystem.hpp>
+#include <cppmakelib/utility/filesystem.hpp>
 
 namespace cppmake
 {

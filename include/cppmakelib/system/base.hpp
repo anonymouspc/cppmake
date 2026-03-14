@@ -1,13 +1,14 @@
 #pragma once
 #include <filesystem>
 #include <string>
-#include <cppmake/utility/filesystem.hpp>
+#include <cppmakelib/utility/filesystem.hpp>
 
 namespace cppmake
 {
     class system_t
     {
         public:
+            std::string           name;
             std::string           executable_suffix;
             std::string           object_suffix;
             std::string           static_suffix;

@@ -1,8 +1,8 @@
 #pragma once
 #define BOOST_PROCESS_USE_STD_FS
 #include <boost/process.hpp>
-#include <cppmake/error/config.hpp>
-#include <cppmake/system/base.hpp>
+#include <cppmakelib/error/config.hpp>
+#include <cppmakelib/system/base.hpp>
 
 namespace cppmake
 {
@@ -18,6 +18,7 @@ namespace cppmake
     mach::mach ( )
     {
         #ifdef __MACH__
+            this->system_t::name              = "mach";
             this->system_t::executable_suffix = "";
             this->system_t::object_suffix     = "o";
             this->system_t::static_suffix     = "a";
