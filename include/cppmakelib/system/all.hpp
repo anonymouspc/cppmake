@@ -1,6 +1,4 @@
 #pragma once
-#include <memory>
-#include <vector>
 #include <cppmakelib/error/config.hpp>
 #include <cppmakelib/error/grouped.hpp>
 #include <cppmakelib/system/base.hpp>
@@ -8,6 +6,9 @@
 #include <cppmakelib/system/mach.hpp>
 #include <cppmakelib/system/win32.hpp>
 #include <cppmakelib/utility/template.hpp>
+#include <exception>
+#include <memory>
+#include <vector>
 
 namespace cppmake
 {
@@ -15,38 +16,38 @@ namespace cppmake
 
     
 
-    auto system_ptr = []
+    auto __system_ptr = []
         {
-            auto values = std::vector<std::unique_ptr<system_t>>();
-            auto errors = std::vector<config_error>();
+            auto value_ptrs = std::vector<std::unique_ptr<system_t>>();
+            auto error_ptrs = std::vector<std::exception_ptr>();
 
             template_for<linux, mach, win32>([&] <class System>
                 {
                     try 
                     { 
-                        values.push_back(std::make_unique<System>()); 
+                        value_ptrs.push_back(std::make_unique<System>()); 
                     } 
                     catch (const config_error& error) 
                     { 
-                        errors.push_back(error); 
+                        error_ptrs.push_back(std::make_exception_ptr(error)); 
                     }
                 });
 
-            if (values.size() == 0)
+            if (value_ptrs.size() == 0)
                 try 
                 { 
-                    throw __grouped_exception<config_error>(errors); 
+                    throw __grouped_exception<config_error>(error_ptrs | std::views::transform([] (auto&& error_ptr) { try { std::rethrow_exception(error_ptr); } catch (const config_error& error) { return error; } })); 
                 } 
                 catch (...) 
                 { 
                     std::throw_with_nested(config_error("system is not recognized")); 
                 }
-            else if (values.size() == 1)
-                return std::move(values[0]);
+            else if (value_ptrs.size() == 1)
+                return std::move(value_ptrs[0]);
             else // if (values.size() >= 2 )
                 try 
                 { 
-                    throw grouped_exception<config_error>(values | std::views::transform([] (auto&& value) { return config_error(std::format("{} is available", value->name)); }));
+                    throw __grouped_exception<config_error>(value_ptrs | std::views::transform([] (auto&& value_ptr) { return config_error(std::format("{} is available", value_ptr->name)); }));
                 } 
                 catch (...)
                 {
@@ -54,5 +55,5 @@ namespace cppmake
                 }
         } ();
 
-    system_t& system = *system_ptr;
+    system_t& system = *__system_ptr;
 }

@@ -3,6 +3,9 @@
 
 namespace cppmake
 {
-    template < class T, class V = void >
-    concept iterable = std::ranges::range<T> and (std::convertible_to<std::ranges::range_value_t<T>, V> or std::same_as<V, void>);
+    template < class T, class V >
+    concept iterable_as = requires (T t) { { *std::begin(t) } -> std::convertible_to<V>; };
+
+    template < class T, class K, class V >
+    concept mappable_as = requires (T t, K k) { { t[k] } -> std::convertible_to<V>; };
 };  
