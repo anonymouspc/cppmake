@@ -1,4 +1,5 @@
 #pragma once
+#include <cppmakelib/error/config.hpp>
 #include <cppmakelib/system/all.hpp>
 #include <cppmakelib/utility/argv.hpp>
 #include <cppmakelib/utility/filesystem.hpp>
@@ -70,6 +71,10 @@ namespace cppmake
         std::string compile_std_string;
         left >> compile_std_string;
         right = (compile_std_string == "c++20") ? __config_t::compile_std_t::cpp20 :
+                (compile_std_string == "c++23") ? __config_t::compile_std_t::cpp23 :
+                (compile_std_string == "c++26") ? __config_t::compile_std_t::cpp26 :
+                                                  throw config_error("invalid compile std");
+        return left;
     }
 
     __config_t config = __config_t(argc, argv);
