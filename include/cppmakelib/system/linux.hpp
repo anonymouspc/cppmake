@@ -24,7 +24,7 @@ namespace cppmake
             this->system_t::static_suffix     = "a";
             this->system_t::dynamic_suffix    = "so";
             this->system_t::compiler_path     = "g++";
-            this->system_t::linker_path       = "ld"
+            this->system_t::linker_path       = "ld";
             this->system_t::install_dir       = "/usr";
         #else
             throw config_error("__linux__ is not defined");

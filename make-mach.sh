@@ -1,6 +1,9 @@
 # pkg/std
 mkdir -p .cppmake/pkg/std/install/import
 clang++ -std=c++26 -Wno-reserved-module-identifier -c $(clang++ --print-resource-dir)/../../../share/libc++/v1/std.cppm -o .cppmake/pkg/std/install/import/std.pcm
+# pkg/std
+mkdir -p .cppmake/pkg/std/install/import
+clang++ -std=c++26 -Wno-reserved-module-identifier -c $(clang++ --print-resource-dir)/../../../share/libc++/v1/std.cppm -o .cppmake/pkg/std/install/import/std.pcm
 
 # pkg/boost
 mkdir -p .cppmake/pkg/boost
@@ -8,7 +11,15 @@ cd pkg/boost
 ./bootstrap.sh
 ./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
 cd ../..
+# pkg/boost
+mkdir -p .cppmake/pkg/boost
+cd pkg/boost
+./bootstrap.sh
+./b2 --with-process --with-program_options --build-dir=../../.cppmake/pkg/boost/build --prefix=../../.cppmake/pkg/boost/install link=static install
+cd ../..
 
+# include
+cp -rl include .cppmake/include
 # include
 cp -rl include .cppmake/include
 
