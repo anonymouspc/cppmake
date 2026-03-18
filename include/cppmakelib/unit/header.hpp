@@ -1,0 +1,7 @@
+namespace cppmake
+{
+    class header
+    {
+        
+    };
+}
