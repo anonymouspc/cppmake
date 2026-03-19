@@ -1,9 +1,9 @@
-#pragma once
+export module cppmake.utility.argv;
 
 namespace cppmake 
 {
-    extern int    argc;
-    extern char** argv;
+    export extern int    argc;
+    export extern char** argv;
 }
 
 

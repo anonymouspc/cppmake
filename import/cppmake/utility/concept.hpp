@@ -1,5 +1,5 @@
-#include <concepts>
-#include <ranges>
+export module cppmake.utility.concepts;
+import        std;
 
 namespace cppmake
 {

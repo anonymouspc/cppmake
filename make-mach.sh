@@ -1,6 +1,7 @@
 # pkg/std
 mkdir -p .cppmake/pkg/std/install/import
 clang++ -std=c++26 -Wno-reserved-module-identifier -c $(clang++ --print-resource-dir)/../../../share/libc++/v1/std.cppm -o .cppmake/pkg/std/install/import/std.pcm
+clang++ .cppmake/pkg/std/install/import/std.pcm -o .cppmake/pkg/std/install/import/std.o
 
 # pkg/boost
 mkdir -p .cppmake/pkg/boost
