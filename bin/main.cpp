@@ -1,5 +1,5 @@
 import std;
-import cppmake.utility.argv;
+import cppmake;
 
 int main ( )
 {

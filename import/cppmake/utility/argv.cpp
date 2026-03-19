@@ -9,10 +9,14 @@ namespace cppmake
 
 
 #ifdef __linux__
-    extern "C" int    __libc_argc;
-    extern "C" char** __libc_argv;
-    int    cppmake::argc = __libc_argc;
-    char** cppmake::argv = __libc_argv;
+    int    cppmake::argc;
+    char** cppmake::argv;
+    [[gnu::constructor]]
+    void constructor ( int argc, char** argv )
+    {
+        cppmake::argc = argc;
+        cppmake::argv = argv;
+    }
 #elifdef __MACH__
     extern "C" int*    _NSGetArgc();
     extern "C" char*** _NSGetArgv();
