@@ -1,7 +1,7 @@
 import std;
-import cppmake;
+import cppmake.utility.argv;
 
 int main ( )
 {
-    std::println("{}", cppmake::config.verbose);
+    std::println("{}", cppmake::argv[1]);
 }
