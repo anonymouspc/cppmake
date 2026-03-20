@@ -12,5 +12,7 @@ clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -I.cppmake/p
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -c .cppmake/pkg/boost/import/boost.dll.pcm -o .cppmake/pkg/boost/import/boost.dll.o
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -I.cppmake/pkg/boost/include --precompile -x c++-module pkg/boost/import/boost/process.cpp -o .cppmake/pkg/boost/import/boost.process.pcm
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -c .cppmake/pkg/boost/import/boost.process.pcm -o .cppmake/pkg/boost/import/boost.process.o
+clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -I.cppmake/pkg/boost/include --precompile -x c++-module pkg/boost/import/boost/program_options.cpp -o .cppmake/pkg/boost/import/boost.program_options.pcm
+clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -c .cppmake/pkg/boost/import/boost.program_options.pcm -o .cppmake/pkg/boost/import/boost.program_options.o
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -I.cppmake/pkg/boost/include --precompile -x c++-module pkg/boost/import/boost.cpp -o .cppmake/pkg/boost/import/boost.pcm
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/pkg/boost/import -c .cppmake/pkg/boost/import/boost.pcm -o .cppmake/pkg/boost/import/boost.o

@@ -1,12 +1,10 @@
-#pragma once
-#include <cassert>
-#include <filesystem>
-#define BOOST_PROCESS_USE_STD_FS
-#include <boost/process.hpp>
+export module cppmake:utility.filesystem;
+import        std;
+import        boost.process;
 
 namespace cppmake
 {
-    class absolute_path
+    export class absolute_path
       : public std::filesystem::path
     {
         public:
@@ -15,7 +13,7 @@ namespace cppmake
             absolute_path ( std::filesystem::path );
     };
 
-    class relative_path
+    export class relative_path
       : public std::filesystem::path
     {
         public:
@@ -24,7 +22,7 @@ namespace cppmake
             relative_path ( std::filesystem::path );
     };
 
-    class resolvable_path
+    export class resolvable_path
       : public std::string
     {
         public:
@@ -36,7 +34,7 @@ namespace cppmake
             friend std::istream& operator >> ( std::istream&, resolvable_path& );
     };
 
-    std::filesystem::path resolve ( const resolvable_path& );
+    export std::filesystem::path resolve ( const resolvable_path& );
 
 
 
@@ -49,7 +47,7 @@ namespace cppmake
     absolute_path::absolute_path ( std::filesystem::path path )
       : std::filesystem::path(std::move(path))
     {
-        assert(this->std::filesystem::path::is_absolute());
+
     }
 
     relative_path::relative_path ( const char* path )
@@ -61,7 +59,7 @@ namespace cppmake
     relative_path::relative_path ( std::filesystem::path path )
       : std::filesystem::path(std::move(path))
     {
-        assert(this->std::filesystem::path::is_relative());
+
     }
 
     resolvable_path::resolvable_path ( const char* path )

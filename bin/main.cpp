@@ -3,5 +3,5 @@ import cppmake;
 
 int main ( )
 {
-    std::println("{}", cppmake::argv[1]);
+    std::println("{}", cppmake::resolve(cppmake::resolvable_path("g++-15")).c_str());
 }

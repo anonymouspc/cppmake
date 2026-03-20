@@ -1,8 +1,9 @@
-#include <concepts>
+export module cppmake:utility.templates;
+import        std;
 
 namespace cppmake
 {
-    template < class... Ts >
+    export template < class... Ts >
     void template_for ( auto&& function )
         requires (requires {function.template operator()<Ts>(); } and ...);
 
