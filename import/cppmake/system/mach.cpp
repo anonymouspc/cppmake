@@ -16,14 +16,14 @@ namespace cppmake
     mach::mach ( )
     {
         #ifdef __MACH__
-            this->system_t::name              = "mach";
-            this->system_t::executable_suffix = "";
-            this->system_t::object_suffix     = "o";
-            this->system_t::static_suffix     = "a";
-            this->system_t::dynamic_suffix    = "dylib";
-            this->system_t::compiler_path     = "clang++";
-            this->system_t::linker_path       = "ld";
-            this->system_t::install_dir       = "/usr";
+            this->name              = "mach";
+            this->executable_suffix = "";
+            this->object_suffix     = "o";
+            this->static_suffix     = "a";
+            this->dynamic_suffix    = "dylib";
+            this->compiler_path     = "clang++";
+            this->linker_path       = "ld";
+            this->install_dir       = "/usr";
         #else
             throw config_error("__MACH__ is not defined");
         #endif

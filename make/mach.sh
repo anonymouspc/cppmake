@@ -1,4 +1,5 @@
 set -x
+alias clang++="clang++ -g"
 
 mkdir -p .cppmake/import
 clang++ -std=c++26 -fprebuilt-module-path=.cppmake/import -fprebuilt-module-path=.cppmake/pkg/std/import -fprebuilt-module-path=.cppmake/pkg/boost/import --precompile -x c++-module import/cppmake/utility/argv.cpp -o .cppmake/import/cppmake-utility.argv.pcm
