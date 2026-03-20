@@ -1,4 +1,4 @@
-export module cppmake.error.config;
+export module cppmake:error.config;
 import        std;
 
 namespace cppmake

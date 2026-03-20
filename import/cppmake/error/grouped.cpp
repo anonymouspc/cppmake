@@ -1,17 +1,15 @@
-#pragma once
-#include <cppmakelib/utility/concept.hpp>
-#include <exception>
-#include <ranges>
-#include <vector>
+export module cppmake:error.grouped;
+import               :utility.concepts;
+import        std;
 
 namespace cppmake
 {
-    template < class Exception >
-    class __grouped_exception
+    export template < class Exception >
+    class grouped_exception
       : public Exception
     {
         public:
-            __grouped_exception ( iterable_as<Exception> auto&& );
+            grouped_exception ( iterable_as<Exception> auto&& );
         
         public:
             virtual const char* what ( ) const noexcept override;
@@ -23,7 +21,7 @@ namespace cppmake
 
 
     template < class Exception >
-    __grouped_exception<Exception>::__grouped_exception ( iterable_as<Exception> auto&& exceptions )
+    grouped_exception<Exception>::grouped_exception ( iterable_as<Exception> auto&& exceptions )
       : Exception(*std::ranges::begin(exceptions)),
         message
             (
@@ -36,13 +34,8 @@ namespace cppmake
     }
 
     template < class Exception >
-    const char* __grouped_exception<Exception>::what ( ) const noexcept
+    const char* grouped_exception<Exception>::what ( ) const noexcept
     {
         return message.c_str();
     }
-
-    auto a = __grouped_exception<std::exception>(std::vector<std::exception>());
-
-
-
 }
