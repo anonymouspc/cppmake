@@ -7,11 +7,11 @@ namespace cppmake
     {
         try
         {
-            throw nested_exception;
+            throw std::forward<decltype(nested_exception)>(nested_exception);
         }
         catch (...)
         {
-            std::throw_with_nested(exception);
+            std::throw_with_nested(std::forward<decltype(exception)>(exception));
         }
     }
 }

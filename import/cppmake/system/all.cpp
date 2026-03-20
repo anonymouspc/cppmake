@@ -32,11 +32,19 @@ namespace cppmake
                 });
 
             if (value_ptrs.size() == 0)
-                throw_with_nested(config_error("system is not recognized"), grouped_exception<config_error>(errors));
+                throw_with_nested
+                (
+                    config_error("system is not recognized"), 
+                    grouped_exception<config_error>(errors)
+                );
             else if (value_ptrs.size() == 1)
                 return std::move(value_ptrs[0]);
-            else // if (values.size() >= 2 )
-                throw_with_nested(config_error("system is ambiguous"), grouped_exception<config_error>(errors));
+            else // if (values.size() >= 2)
+                throw_with_nested
+                (
+                    config_error("system is ambiguous"), 
+                    grouped_exception<config_error>(value_ptrs | std::views::transform([] (auto&& value_ptr) { return config_error(std::format("{} is available", value_ptr->name)); }))
+                );
         } ();
 
     system_t& system = *system_ptr;

@@ -3,8 +3,8 @@ import        std;
 
 namespace cppmake 
 {
-    extern int    argc;
-    extern char** argv;
+    export extern int    argc;
+    export extern char** argv;
 
 
 
@@ -16,7 +16,7 @@ namespace cppmake
     #elifdef __MACH__
         extern "C" int*    _NSGetArgc();
         extern "C" char*** _NSGetArgv();
-        int argc    = *_NSGetArgc();
+        int    argc = *_NSGetArgc();
         char** argv = *_NSGetArgv();
     #elifdef _MSC_VER
         extern "C" int    __argc;

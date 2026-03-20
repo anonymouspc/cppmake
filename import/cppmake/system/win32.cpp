@@ -16,14 +16,14 @@ namespace cppmake
     win32::win32 ( )
     {
         #ifdef _WIN32
-            this->system_t::name              = "win32"
-            this->system_t::executable_suffix = "exe";
-            this->system_t::object_suffix     = "obj";
-            this->system_t::static_suffix     = "lib";
-            this->system_t::dynamic_suffix    = "dll";
-            this->system_t::compiler_path     = "cl.exe";
-            this->system_t::linker_path       = "link.exe"
-            this->system_t::install_dir       = "C:\\Program Files";
+            this->name              = "win32"
+            this->executable_suffix = "exe";
+            this->object_suffix     = "obj";
+            this->static_suffix     = "lib";
+            this->dynamic_suffix    = "dll";
+            this->compiler_path     = "cl.exe";
+            this->linker_path       = "link.exe"
+            this->install_dir       = "C:\\Program Files";
         #else
             throw config_error("_WIN32 is not defined");
         #endif

@@ -16,14 +16,14 @@ namespace cppmake
     linux::linux ( )
     {
         #ifdef __linux__
-            this->system_t::name              = "linux";
-            this->system_t::executable_suffix = "";
-            this->system_t::object_suffix     = "o";
-            this->system_t::static_suffix     = "a";
-            this->system_t::dynamic_suffix    = "so";
-            this->system_t::compiler_path     = "g++";
-            this->system_t::linker_path       = "ld";
-            this->system_t::install_dir       = "/usr";
+            this->name              = "linux";
+            this->executable_suffix = "";
+            this->object_suffix     = "o";
+            this->static_suffix     = "a";
+            this->dynamic_suffix    = "so";
+            this->compiler_path     = "g++";
+            this->linker_path       = "ld";
+            this->install_dir       = "/usr";
         #else
             throw config_error("__linux__ is not defined");
         #endif
