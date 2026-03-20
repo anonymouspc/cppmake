@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "lldb .cppmake/bin/main",
+            "name": "lldb bin/main",
             "type": "lldb-dap",
             "request": "launch",
             "program": "${workspaceFolder}/.cppmake/bin/main",

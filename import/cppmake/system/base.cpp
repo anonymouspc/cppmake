@@ -1,11 +1,10 @@
-#pragma once
-#include <cppmakelib/utility/filesystem.hpp>
-#include <filesystem>
-#include <string>
+export module cppmake:system.base;
+import               :utility.filesystem;
+import        std;
 
 namespace cppmake
 {
-    class system_t
+    export class system_t
     {
         public:
             std::string           name;
@@ -16,5 +15,8 @@ namespace cppmake
             resolvable_path       compiler_path;
             resolvable_path       linker_path;
             std::filesystem::path install_dir;
+
+        private:
+            virtual void make_virtual ( ) = delete;
     };
 }

@@ -1,27 +1,26 @@
-#pragma once
-#include <cppmakelib/error/config.hpp>
-#include <cppmakelib/system/all.hpp>
-#include <cppmakelib/utility/argv.hpp>
-#include <cppmakelib/utility/filesystem.hpp>
-#include <filesystem>
-#include <istream>
-#include <string>
-#include <boost/asio.hpp>
-#include <boost/program_options.hpp>
+export module cppmake:basic.config;
+import               :error.config;
+import               :system.all;
+import               :utility.argv;
+import               :utility.filesystem;
+import        std;
+import        boost.program_options;
+
+
 
 namespace cppmake
 {
-    struct __config_t;
-    extern __config_t config;
+    export class config_t;
+    export extern config_t config;
 
 
 
-    class __config_t
+    class config_t
     {
         public:
             enum class compile_std_t  { cpp20, cpp23, cpp26 };
             enum class compile_type_t { debug, release, size };
-            enum class link_type_t    { static_, dynamic, shared = dynamic };
+            enum class link_type_t    { static_, dynamic };
 
         public:
             std::filesystem::path project_dir;
@@ -38,44 +37,89 @@ namespace cppmake
             bool                  dry;
 
         public:
-            __config_t ( int argc, char** argv );
-
-        public:
-            friend std::istream& operator >> ( std::istream&, compile_std_t& );
-            friend std::istream& operator >> ( std::istream&, compile_type_t& );
-            friend std::istream& operator >> ( std::istream&, link_type_t& );
+            config_t ( int argc, char** argv );
     };
 
-    __config_t::__config_t ( int argc, char** argv )
-    {
-        auto option_description = boost::program_options::options_description("options");
-        option_description.add_options()
-            ("--project-dir",   boost::program_options::value<std::filesystem::path>     (&this->project_dir)  ->default_value("."))
-            ("--build-dir",     boost::program_options::value<std::filesystem::path>     (&this->build_dir)    ->default_value(".cppmake"))
-            ("--install-dir",   boost::program_options::value<std::filesystem::path>     (&this->install_dir)  ->default_value(system.install_dir))
-            ("--compiler-path", boost::program_options::value<resolvable_path>           (&this->compiler_path)->default_value(system.compiler_path))
-            ("--compile-std",   boost::program_options::value<__config_t::compile_std_t> (&this->compile_std)  ->default_value(__config_t::compile_std_t::cpp26))
-            ("--compile-type",  boost::program_options::value<__config_t::compile_type_t>(&this->compile_type) ->default_value(__config_t::compile_type_t::debug))
-            ("--linker-path",   boost::program_options::value<resolvable_path>           (&this->linker_path)  ->default_value(system.linker_path))
-            ("--linker-type",   boost::program_options::value<__config_t::link_type_t>   (&this->link_type)    ->default_value(__config_t::link_type_t::static_))
-            ("--target",        boost::program_options::value<std::string>               (&this->target)       ->default_value("make"))
-            ("--jobs",          boost::program_options::value<unsigned>                  (&this->jobs)         ->default_value(std::thread::hardware_concurrency()))
-            ("--verbose",       boost::program_options::bool_switch                      (&this->verbose)      ->default_value(false))
-            ("--dry",           boost::program_options::bool_switch                      (&this->dry)          ->default_value(false));
-
-        boost::program_options::command_line_parser(argc, argv).options(option_description).run();
-    }
-
-    std::istream& operator >> ( std::istream& left, __config_t::compile_std_t& right )
+    std::istream& operator >> ( std::istream& left, config_t::compile_std_t& right )
     {
         std::string compile_std_string;
         left >> compile_std_string;
-        right = (compile_std_string == "c++20") ? __config_t::compile_std_t::cpp20 :
-                (compile_std_string == "c++23") ? __config_t::compile_std_t::cpp23 :
-                (compile_std_string == "c++26") ? __config_t::compile_std_t::cpp26 :
+        right = (compile_std_string == "c++20") ? config_t::compile_std_t::cpp20 :
+                (compile_std_string == "c++23") ? config_t::compile_std_t::cpp23 :
+                (compile_std_string == "c++26") ? config_t::compile_std_t::cpp26 :
                                                   throw config_error("invalid compile std");
         return left;
     }
 
-    __config_t config = __config_t(argc, argv);
+    std::ostream& operator << ( std::ostream& left, const config_t::compile_std_t& right )
+    {
+        std::string compile_std_string = (right == config_t::compile_std_t::cpp20) ? "c++20" : 
+                                         (right == config_t::compile_std_t::cpp23) ? "c++23" :       
+                                         (right == config_t::compile_std_t::cpp26) ? "c++26" :
+                                                                                     throw config_error("invalid compile std");
+        left << compile_std_string;
+        return left;
+    }
+
+    std::istream& operator >> ( std::istream& left, config_t::compile_type_t& right )
+    {
+        std::string compile_type_string;
+        left >> compile_type_string;
+        right = (compile_type_string == "debug")   ? config_t::compile_type_t::debug   :
+                (compile_type_string == "release") ? config_t::compile_type_t::release :
+                (compile_type_string == "size")    ? config_t::compile_type_t::size    :
+                                                     throw config_error("invalid compile type");
+        return left;
+    }
+
+    std::ostream& operator << ( std::ostream& left, const config_t::compile_type_t& right )
+    {
+        std::string compile_type_string = (right == config_t::compile_type_t::debug)   ? "debug"   :
+                                          (right == config_t::compile_type_t::release) ? "release" :
+                                          (right == config_t::compile_type_t::size)    ? "size"    :
+                                                                                         throw config_error("invalid compile type");
+        left << compile_type_string;
+        return left;
+    }
+
+    std::istream& operator >> ( std::istream& left, config_t::link_type_t& right )
+    {
+        std::string link_type_string;
+        left >> link_type_string;
+        right = (link_type_string == "static")  ? config_t::link_type_t::static_ :
+                (link_type_string == "dynamic") ? config_t::link_type_t::dynamic :
+                                                  throw config_error("invalid link type");
+        return left;
+    }
+
+    std::ostream& operator << ( std::ostream& left, const config_t::link_type_t& right )
+    {
+        std::string link_type_string = (right == config_t::link_type_t::static_) ? "static"  :
+                                       (right == config_t::link_type_t::dynamic) ? "dynamic" :
+                                                                                   throw config_error("invalid link type");
+        left << link_type_string;
+        return left;
+    }
+
+    config_t::config_t ( int argc, char** argv )
+    {
+        auto option_description = boost::program_options::options_description("options");
+        option_description.add_options()
+            ("--project-dir",   boost::program_options::value<std::filesystem::path>   (&this->project_dir)  ->default_value("."))
+            ("--build-dir",     boost::program_options::value<std::filesystem::path>   (&this->build_dir)    ->default_value(".cppmake"))
+            ("--install-dir",   boost::program_options::value<std::filesystem::path>   (&this->install_dir)  ->default_value(system.install_dir))
+            ("--compiler-path", boost::program_options::value<resolvable_path>         (&this->compiler_path)->default_value(system.compiler_path))
+            ("--compile-std",   boost::program_options::value<config_t::compile_std_t> (&this->compile_std)  ->default_value(config_t::compile_std_t::cpp26))
+            ("--compile-type",  boost::program_options::value<config_t::compile_type_t>(&this->compile_type) ->default_value(config_t::compile_type_t::debug))
+            ("--linker-path",   boost::program_options::value<resolvable_path>         (&this->linker_path)  ->default_value(system.linker_path))
+            ("--linker-type",   boost::program_options::value<config_t::link_type_t>   (&this->link_type)    ->default_value(config_t::link_type_t::static_))
+            ("--target",        boost::program_options::value<std::string>             (&this->target)       ->default_value("make"))
+            ("--jobs",          boost::program_options::value<unsigned>                (&this->jobs)         ->default_value(std::thread::hardware_concurrency()))
+            ("--verbose",       boost::program_options::bool_switch                    (&this->verbose)      ->default_value(false))
+            ("--dry",           boost::program_options::bool_switch                    (&this->dry)          ->default_value(false));
+
+        boost::program_options::command_line_parser(argc, argv).options(option_description).run();
+    }
+
+    config_t config = config_t(argc, argv);
 }

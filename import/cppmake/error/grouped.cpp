@@ -9,7 +9,7 @@ namespace cppmake
       : public Exception
     {
         public:
-            grouped_exception ( iterable_as<Exception> auto&& );
+            grouped_exception ( const iterable_as<Exception> auto& );
         
         public:
             virtual const char* what ( ) const noexcept override;
@@ -21,7 +21,7 @@ namespace cppmake
 
 
     template < class Exception >
-    grouped_exception<Exception>::grouped_exception ( iterable_as<Exception> auto&& exceptions )
+    grouped_exception<Exception>::grouped_exception ( const iterable_as<Exception> auto& exceptions )
       : Exception(*std::ranges::begin(exceptions)),
         message
             (

@@ -23,7 +23,6 @@ namespace cppmake
     };
 
     export class resolvable_path
-      : public std::string
     {
         public:
             resolvable_path ( )             = default;
@@ -31,10 +30,11 @@ namespace cppmake
             resolvable_path ( std::string );
 
         public:
-            friend std::istream& operator >> ( std::istream&, resolvable_path& );
+            std::string data;
+            friend std::filesystem::path resolve ( const resolvable_path& );
+            friend std::istream& operator >> ( std::istream&,       resolvable_path& );
+            friend std::ostream& operator << ( std::ostream&, const resolvable_path& );
     };
-
-    export std::filesystem::path resolve ( const resolvable_path& );
 
 
 
@@ -69,18 +69,23 @@ namespace cppmake
     }
     
     resolvable_path::resolvable_path ( std::string path )
-      : std::string(std::move(path))
+      : data(std::move(path))
     {
         
     }
 
     std::filesystem::path resolve ( const resolvable_path& path )
     {
-        return boost::process::environment::find_executable(static_cast<const std::string&>(path));
+        return boost::process::environment::find_executable(path.data);
     }
 
     std::istream& operator >> ( std::istream& left, resolvable_path& right )
     {
-        return left >> static_cast<std::string&>(right);
+        return left >> right.data;
+    }
+
+    std::ostream& operator << ( std::ostream& left, const resolvable_path& right )
+    {
+        return left << right.data;
     }
 }

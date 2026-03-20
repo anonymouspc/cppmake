@@ -1,12 +1,10 @@
-#pragma once
-#include <cppmakelib/error/config.hpp>
-#include <cppmakelib/system/base.hpp>
-#define BOOST_PROCESS_USE_STD_FS
-#include <boost/process.hpp>
+export module cppmake:system.mach;
+import               :system.base;
+import               :error.config;
 
 namespace cppmake
 {
-    class mach
+    export class mach
       : public system_t
     {
         public:

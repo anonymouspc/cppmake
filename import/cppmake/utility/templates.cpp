@@ -3,7 +3,7 @@ import        std;
 
 namespace cppmake
 {
-    export template < class... Ts >
+    template < class... Ts >
     void template_for ( auto&& function )
         requires (requires {function.template operator()<Ts>(); } and ...);
 

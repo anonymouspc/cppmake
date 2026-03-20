@@ -1,12 +1,10 @@
-#pragma once
-#include <cppmakelib/error/config.hpp>
-#include <cppmakelib/system/base.hpp>
-#define BOOST_PROCESS_USE_STD_FS
-#include <boost/process.hpp>
+export module cppmake:system.win32;
+import               :system.base;
+import               :error.config;
 
 namespace cppmake
 {
-    class win32
+    export class win32
       : public system_t
     {
         public:

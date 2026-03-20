@@ -3,8 +3,13 @@ import               :utility.concepts;
 
 namespace cppmake
 {
-    export class version
+    export class version_t;
+    export extern version_t version;
+
+
+    
+    class version_t
     {
-        version ( const iterable_as<int> auto& );
+        version_t ( const iterable_as<int> auto& );
     };
 }
