@@ -18,6 +18,9 @@ namespace cppmake
             enum class link_type_t    { static_, dynamic };
 
         public:
+            config_t ( int argc, char** argv );
+
+        public:
             std::filesystem::path project_dir;
             std::filesystem::path build_dir;
             std::filesystem::path install_dir;
@@ -30,9 +33,6 @@ namespace cppmake
             unsigned              jobs;
             bool                  verbose;
             bool                  dry;
-
-        public:
-            config_t ( int argc, char** argv );
     };
 
     export extern config_t config;
@@ -50,7 +50,7 @@ namespace cppmake
         return left;
     }
 
-    export std::ostream& operator << ( std::ostream& left, const config_t::compile_std_t& right )
+    std::ostream& operator << ( std::ostream& left, const config_t::compile_std_t& right )
     {
         std::string compile_std_string = (right == config_t::compile_std_t::cpp20) ? "c++20" : 
                                          (right == config_t::compile_std_t::cpp23) ? "c++23" :       
@@ -117,10 +117,10 @@ namespace cppmake
             ("verbose",       boost::program_options::bool_switch                    (&this->verbose)      ->default_value(false))
             ("dry",           boost::program_options::bool_switch                    (&this->dry)          ->default_value(false));
 
-        auto options = boost::program_options::command_line_parser(argc, argv).options(option_description).run();
-        auto variables = boost::program_options::variables_map();
-        boost::program_options::store(options, variables);
-        boost::program_options::notify(variables);
+        auto parsed_options = boost::program_options::command_line_parser(argc, argv).options(option_description).run();
+        auto variables_map  = boost::program_options::variables_map();
+        boost::program_options::store(parsed_options, variables_map);
+        boost::program_options::notify(variables_map);
     }
 
     config_t config = config_t(argc, argv);

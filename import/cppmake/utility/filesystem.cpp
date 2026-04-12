@@ -4,37 +4,41 @@ import        boost.process;
 
 namespace cppmake
 {
-    export class absolute_path
+    class absolute_path
       : public std::filesystem::path
     {
         public:
-            absolute_path ( )                       = default;
-            absolute_path ( const char* );
-            absolute_path ( std::filesystem::path );
+            absolute_path ( )                            = default;
+            absolute_path ( const char*           path );
+            absolute_path ( std::filesystem::path path );
     };
 
-    export class relative_path
+    class relative_path
       : public std::filesystem::path
     {
         public:
-            relative_path ( )                       = default;
-            relative_path ( const char* );
-            relative_path ( std::filesystem::path );
+            relative_path ( )                            = default;
+            relative_path ( const char*           path );
+            relative_path ( std::filesystem::path path );
     };
 
-    export class resolvable_path
+    class resolvable_path
     {
         public:
-            resolvable_path ( )             = default;
-            resolvable_path ( const char* );
-            resolvable_path ( std::string );
+            resolvable_path ( )                  = default;
+            resolvable_path ( const char* path );
+            resolvable_path ( std::string path );
 
         public:
             std::string data;
-            friend std::filesystem::path resolve ( const resolvable_path& );
-            friend std::istream& operator >> ( std::istream&,       resolvable_path& );
-            friend std::ostream& operator << ( std::ostream&, const resolvable_path& );
+
+        private:
+            friend std::filesystem::path resolve ( const resolvable_path& path );
+            friend std::istream& operator >> ( std::istream& left,       resolvable_path& right );
+            friend std::ostream& operator << ( std::ostream& left, const resolvable_path& right );
     };
+
+    std::filesystem::path resolve ( const resolvable_path& path );
 
 
 

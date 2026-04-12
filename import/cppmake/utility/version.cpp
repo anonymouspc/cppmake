@@ -10,6 +10,6 @@ namespace cppmake
     
     class version_t
     {
-        version_t ( const iterable_as<int> auto& );
+        version_t ( const iterable_as<int> auto& numbers );
     };
 }

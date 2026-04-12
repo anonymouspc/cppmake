@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "make",
+            "group": "build",
+            "linux": {
+                "command": "make-linux.sh"
+            },
+            "osx": {
+                "command": "make-mach.sh"
+            }
+        }
+    ]
+}

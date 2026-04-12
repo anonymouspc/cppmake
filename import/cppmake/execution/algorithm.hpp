@@ -1,10 +1,14 @@
-module;
-#include <version>
-
-export module cppmake.execution.algorighm;
+export module cppmake:execution.algorighm;
+import        cppmake:utility.concepts;
+import        std;
 import        boost.asio;
 
 namespace cppmake
 {
-    #ifdef __cpp_lib_sender
+    auto sync_wait ( awaitable auto&& );
+
+    awaitable auto when_all ( awaitable auto&&... );
+
+    template < class... Ts >
+    awaitable 
 }

@@ -3,6 +3,5 @@ import cppmake;
 
 int main ( )
 {
-    std::println("{}", (std::stringstream() << cppmake::config.compile_std).str());
-    std::println("{}", cppmake::config.verbose);
+    std::println("{}", std::type_index(typeid(cppmake::system)) == std::type_index(typeid(cppmake::mach)));
 }

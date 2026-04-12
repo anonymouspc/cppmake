@@ -1,7 +1,7 @@
 set -x
 
 cd pkg/boost/git
-./bootstrap.sh
+./bootstrap.sh --with-bjam=./b2
 ./b2 --with-process --with-program_options --build-dir=../../../.cppmake/pkg/boost/.build --prefix=../../../.cppmake/pkg/boost link=static install
 cd ../../..
 

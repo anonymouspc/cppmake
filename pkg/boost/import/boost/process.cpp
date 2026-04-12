@@ -11,5 +11,6 @@ namespace boost::process
     namespace environment
     {
         export using boost::process::environment::find_executable;
+        export using boost::process::environment::current;
     }
 }

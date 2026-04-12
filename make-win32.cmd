@@ -1,1 +1,1 @@
-Get-ChildItem 
+dir

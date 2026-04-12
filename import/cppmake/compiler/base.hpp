@@ -1,8 +1,7 @@
-#include "cppmakelib/utility/filesystem.hpp"
-#include <cppmakelib/utility/concept.hpp>
-#include <filesystem>
-#include <map>
-#include <vector>
+export module cppmake:compiler.base;
+import               :utility.concepts;
+import               :utility.filesystem;
+import         std;
 
 namespace cppmake
 {

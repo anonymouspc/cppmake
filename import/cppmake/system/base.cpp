@@ -17,6 +17,6 @@ namespace cppmake
             std::filesystem::path install_dir;
 
         private:
-            virtual void make_virtual ( ) = delete;
+            virtual void _ ( ) = delete; // Make virtual.
     };
 }
