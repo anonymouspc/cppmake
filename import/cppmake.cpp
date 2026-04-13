@@ -1,7 +1,6 @@
 export module cppmake;
 export import        :basic.config;
 export import        :system.all;
-export import        :system.base;
 export import        :system.linux;
 export import        :system.mach;
 export import        :system.win32;
