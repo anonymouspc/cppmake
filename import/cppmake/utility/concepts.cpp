@@ -13,11 +13,11 @@ namespace cppmake
         requires (T& t) { { [] { for (auto&& v : t) return v; } () } -> std::convertible_to<V>; };
 
     template < class T, class I >
-    concept indexable_by = 
+    concept mappable_by = 
         requires (T& t, I& i) { t[i]; };
 
     template < class T, class I, class V >
-    concept indexable_into = 
+    concept mappable_into = 
         requires (T& t, I& i) { { t[i] } -> std::convertible_to<V>; };
 
     template < class T >
