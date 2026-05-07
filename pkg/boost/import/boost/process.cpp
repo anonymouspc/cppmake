@@ -1,5 +1,5 @@
 module;
-#define BOOST_PROCESS_USE_STD_FS
+#define BOOST_PROCESS_USE_STD_FS 1
 #include <boost/process.hpp>
 
 export module boost.process;

@@ -111,7 +111,7 @@ namespace cppmake
             ("compile-std",   boost::program_options::value<config_t::compile_std_t> (&this->compile_std)  ->default_value(config_t::compile_std_t::cpp26))
             ("compile-type",  boost::program_options::value<config_t::compile_type_t>(&this->compile_type) ->default_value(config_t::compile_type_t::debug))
             ("linker-path",   boost::program_options::value<resolvable_path>         (&this->linker_path)  ->default_value(system.visit([] (auto&& system) { return system.linker_path; })))
-            ("linker-type",   boost::program_options::value<config_t::link_type_t>   (&this->link_type)    ->default_value(config_t::link_type_t::static_))
+            ("link-type",     boost::program_options::value<config_t::link_type_t>   (&this->link_type)    ->default_value(config_t::link_type_t::static_))
             ("target",        boost::program_options::value<std::string>             (&this->target)       ->default_value("make"))
             ("jobs",          boost::program_options::value<unsigned>                (&this->jobs)         ->default_value(std::thread::hardware_concurrency()))
             ("verbose",       boost::program_options::bool_switch                    (&this->verbose)      ->default_value(false))
