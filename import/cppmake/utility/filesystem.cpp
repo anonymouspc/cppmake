@@ -80,6 +80,7 @@ namespace cppmake
 
     std::filesystem::path resolve ( const resolvable_path& path )
     {
+        static_assert(std::same_as<boost::process::v2::filesystem::git,std::filesystem::path> );
         return boost::process::environment::find_executable(path.data);
     }
 
