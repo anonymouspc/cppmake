@@ -1,8 +1,8 @@
 set -x
 
 cd pkg/boost/git
-./bootstrap.sh --with-bjam=./b2
-./b2 --with-process --with-program_options --build-dir=../../../.cppmake/pkg/boost/.build --prefix=../../../.cppmake/pkg/boost link=static install
+./bootstrap.sh
+./b2 --with-process --with-program_options --build-dir=../../../.cppmake/pkg/boost/.build --prefix=../../../.cppmake/pkg/boost toolset=gcc link=static install
 cd ../../..
 
 mkdir -p .cppmake/pkg/boost/import

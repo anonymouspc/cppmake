@@ -1,11 +1,11 @@
 set -x
+truncate -s 0 .cppmake/.mapper
 
 ./pkg/std/make-linux.sh
 ./pkg/boost/make-linux.sh
 
 mkdir -p .cppmake/import
-truncate -s 0 .cppmake/.mapper
-echo "cppmake:utility.argv .cppmake/import/cppmake-utility.argv.gcm" >> ".cppmake/.mapper"
+echo "cppmake:utility.argv .cppmake/import/cppmake-utility.argv.gcm" >> ".cppmake/.mapper" # cppmake:utility
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/utility/argv.cpp -o .cppmake/import/cppmake-utility.argv.o
 echo "cppmake:utility.concepts .cppmake/import/cppmake-utility.concepts.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/utility/concepts.cpp -o .cppmake/import/cppmake-utility.concepts.o
@@ -17,13 +17,11 @@ echo "cppmake:utility.throws .cppmake/import/cppmake-utility.throws.gcm" >> ".cp
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/utility/throws.cpp -o .cppmake/import/cppmake-utility.throws.o
 echo "cppmake:utility.version .cppmake/import/cppmake-utility.version.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/utility/version.cpp -o .cppmake/import/cppmake-utility.version.o
-echo "cppmake:error.config .cppmake/import/cppmake-error.config.gcm" >> ".cppmake/.mapper"
+echo "cppmake:error.config .cppmake/import/cppmake-error.config.gcm" >> ".cppmake/.mapper" # cppmake:error
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/error/config.cpp -o .cppmake/import/cppmake-error.config.o
 echo "cppmake:error.grouped .cppmake/import/cppmake-error.grouped.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/error/grouped.cpp -o .cppmake/import/cppmake-error.grouped.o
-echo "cppmake:system.base .cppmake/import/cppmake-system.base.gcm" >> ".cppmake/.mapper"
-g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/system/base.cpp -o .cppmake/import/cppmake-system.base.o
-echo "cppmake:system.linux .cppmake/import/cppmake-system.linux.gcm" >> ".cppmake/.mapper"
+echo "cppmake:system.linux .cppmake/import/cppmake-system.linux.gcm" >> ".cppmake/.mapper" # cppmake:system
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/system/linux.cpp -o .cppmake/import/cppmake-system.linux.o
 echo "cppmake:system.mach .cppmake/import/cppmake-system.mach.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/system/mach.cpp -o .cppmake/import/cppmake-system.mach.o
@@ -31,7 +29,7 @@ echo "cppmake:system.win32 .cppmake/import/cppmake-system.win32.gcm" >> ".cppmak
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/system/win32.cpp -o .cppmake/import/cppmake-system.win32.o
 echo "cppmake:system.all .cppmake/import/cppmake-system.all.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/system/all.cpp -o .cppmake/import/cppmake-system.all.o
-echo "cppmake:basic.config .cppmake/import/cppmake-basic.config.gcm" >> ".cppmake/.mapper"
+echo "cppmake:basic.config .cppmake/import/cppmake-basic.config.gcm" >> ".cppmake/.mapper" # cppmake:basic
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake/basic/config.cpp -o .cppmake/import/cppmake-basic.config.o
 echo "cppmake .cppmake/import/cppmake.gcm" >> ".cppmake/.mapper"
 g++ -std=c++26 -fmodules -fmodule-mapper=.cppmake/.mapper -Wno-expose-global-module-tu-local -c import/cppmake.cpp -o .cppmake/import/cppmake.o
