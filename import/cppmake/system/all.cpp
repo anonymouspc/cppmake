@@ -42,7 +42,7 @@ namespace cppmake
                     grouped_exception<config_error>(
                         values | std::views::transform([] (auto&& value) 
                             { 
-                                return config_error(std::format("{} is available", value.visit([] (auto&& compiler) { return compiler.name; }))); 
+                                return config_error(std::format("{} is satisfied", value.visit([] (auto&& system) { return system.name; }))); 
                             }))
                 );
         } ();
