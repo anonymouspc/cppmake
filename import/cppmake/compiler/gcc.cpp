@@ -1,7 +1,5 @@
-#pragma once
-#include <cppmakelib/utility/concept.hpp>
-#include <cppmakelib/utility/filesystem.hpp>
-#include <ranges>
+export module cppmake:compiler.gcc;
+import        std;
 
 namespace cppmake
 {

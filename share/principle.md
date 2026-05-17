@@ -1,8 +1,20 @@
-Here are several principles of developments.
+- 如果你不想`compiler.visit([] (auto&& comp) { return comp.name; })`
+    - 你就需要不同的compiler拥有一致的abi内存布局
+        - 你就需要不同的compiler继承自同一个基类
+            - 你就需要在基类中标注完整的函数签名`co_async<void> compiler_t::async_compile(source_file, compile_options, ..., object_file)`
+                - 如果这个函数签名是模板
+                    - 就会出现`const iterable_as<std::filesystem::path> auto&`
+                        - 你喜欢，优雅，性能高，但是不解决问题。
+                        - 这个函数就不能是virtual
+                            - 这个函数就需要手动分发
+                                - 这个函数就需要知道所有的会分发到的子类
+                                    - 子类又需要知道你这个父类的完整abi信息
+                                        - **爆炸了**
+                - 如果这个函数签名不是模板
+                    - 就会出现`const std::vector<std::filesystem::path> auto&`
+                        - 你不喜欢，丑，性能低，但是解决问题。
 
-0. A builder should not rely on another builder (just like the question "the chicken or the egg appears first"). So that:
-    - We **cannot** use `cmake`, `makefile` or else as our builder.
-    - We **cannot** import libraries who uses `cmake`, `makefile` or else as builder.
-        - `boost` uses `b2` (which only depends on `bootstrap.sh` that invokes the compiler and outputs a self-written builder) as builder.
-        - `stdexec` or `beman::execution` are header-only, which only depends on `cp` command.
-    - We should use **as less commands as possible** in the `xxx-make` script.
+- 如果你能接受`compiler.visit([] (auto&& comp) { return comp.name; })`
+    - 什么东西都套一层进入`std::variant`
+        - 很统一
+        - 长
